@@ -1,0 +1,13 @@
+{
+  "name": "mailchannels/drupal-mail-contract-probe",
+  "description": "Isolated Drupal mail conversion contract checks",
+  "type": "project",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": "^8.3",
+    "drupal/core": "11.4.8"
+  },
+  "config": {
+    "allow-plugins": false
+  }
+}

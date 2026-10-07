@@ -1,0 +1,6 @@
+services:
+  mailchannels_email_api.uninstall_validator:
+    class: Drupal\mailchannels_email_api\MailMappingUninstallValidator
+    arguments: ['@config.factory', '@string_translation']
+    tags:
+      - { name: module_install.uninstall_validator }

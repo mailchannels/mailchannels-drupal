@@ -1,0 +1,5 @@
+mailchannels_email_api.settings:
+  title: 'MailChannels Email API'
+  description: 'Inspect server configuration and choose the default mail backend.'
+  route_name: mailchannels_email_api.settings
+  parent: system.admin_config_system

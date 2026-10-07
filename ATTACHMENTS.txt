@@ -1,0 +1,76 @@
+Drupal attachment support and remaining compatibility requirements
+
+The native MailChannels backend maps explicit attachment data using Drupal's file
+and MIME services. Core MailInterface does not define a universal attachment array;
+the adapter supports the conventions below without claiming compatibility with
+all contributed mailer implementations.
+
+Implemented native adapter:
+- One unambiguous source: top-level or params attachment(single)/attachments(list).
+- filecontent carries raw binary bytes, base64-encoded exactly once for the API.
+- filepath takes precedence, using Drupal file_system realpath. Local paths and
+  public/private/temporary/file wrappers are supported; remote/custom schemes and
+  non-local resolution are rejected. A filename alone is never treated as a path.
+- filename defaults to path basename or attachment.dat. filemime is passed through
+  or guessed with Drupal's MIME service. Explicit filemime is recommended: Drupal
+  may classify .dat as chemical/x-mopac-input rather than application/octet-stream.
+- disposition=inline requires a valid unique cid, mapped to content_id. A cid with
+  attachment disposition is rejected because the API would force inline behavior.
+- Identical path/content plus metadata deduplicates. Conflicting duplicate metadata
+  rejects rather than silently losing a filename or content ID.
+- Local default limit is 20 MiB total raw attachment bytes (before base64); configure
+  mailchannels_attachment_bytes in server settings to change it. This is a module
+  resource limit, not a claim about the provider's full-message size limit. Up to
+  1000 input attachments; malformed, oversized and ambiguous inputs reject.
+
+Native tests cover binary/empty data, MIME guessing, public/private/temporary paths,
+path precedence, duplicates/inline IDs, size limits, actual MailManager mock-HTTP
+JSON, and CID linkage in HTML. All files/mappings/settings/client are restored.
+This does not establish compatibility with installed Mime Mail/Email Attachment
+Helper rewriting, raw multipart parsing, every storage backend or live provider
+acceptance. Those require separate native module/deployment validation.
+
+File paths must come from trusted server-side composition code after application
+access checks. File-system readability is not end-user authorization.
+
+Observed contributed conventions:
+1. Mime Mail: params.attachments is a list of dictionaries. filepath takes priority;
+   otherwise filecontent is required. filename defaults to the local basename or
+   attachment.dat. filemime can be guessed by Drupal's extension MIME service.
+   Duplicate paths or content are removed. Public/private/local-path reading,
+   provider payload size, lifecycle and duplicates need explicit native tests.
+2. Email Attachment Helper: params.attachment (single) or params.attachments (list),
+   with filecontent/filename/filemime. Optional disposition=inline and cid define
+   embedded content. Version 8.x-1.7 rewrites body/headers to multipart/mixed
+   whenever either params key is nonempty, with no backend-selection guard.
+   This is incompatible with the current adapter's supported content types.
+   A source-level probe of the real helper hook confirms singular, plural and
+   inline rewrites are rejected at the content-type boundary. Attachment-free
+   messages are unchanged. This is not an installed-site compatibility test.
+
+Migration from Email Attachment Helper:
+- Inventory other mail backends before changing the helper: its hook affects all
+  core mail messages, and removing it could break attachments on other routes.
+- In an isolated site, arrange for MailChannels messages to reach this adapter
+  without helper MIME rewriting. Do not simply relabel a multipart body as plain
+  text or HTML; that would expose MIME serialization as message content.
+- Compose the supported attachment arrays directly. Convert helper filename-only
+  file inputs to an explicit filepath plus a display filename. Preserve empty
+  filecontent bytes explicitly: the helper treats empty content as a file fallback,
+  whereas this adapter supports empty attachments.
+- Revalidate every affected mail route, binary and inline content, and any other
+  helper consumers before deployment. No automatic helper disablement or hook
+  suppression is implemented by this candidate.
+3. Mailer Plus/Symfony component transports are separate adapter routes. Do not
+   treat these arrays as their native Email/attachment contract.
+
+Sources:
+https://api.drupal.org/api/drupal/core!lib!Drupal!Core!Mail!MailInterface.php/interface/MailInterface/11.x
+https://www.drupal.org/docs/contributed-modules/mime-mail/for-developers/file-attachments
+https://www.drupal.org/project/email_attachment
+https://docs.mailchannels.com/api-reference/send/send-an-email
+MailChannels Attachment schema and installed Drupal11.4.8 mail plugins.
+
+
+Pinned helper source inspected: 8.x-1.7 / 8da7aa7ad4f2f4481fadce1cb943cc3b83ae859f
+https://git.drupalcode.org/project/email_attachment/-/tree/8.x-1.7
