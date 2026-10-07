@@ -6,14 +6,20 @@ It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
 The public native runner creates a fresh Drupal 11.4.8/PHP 8.3.35/MariaDB 11.8.9
-site and runs 121 checks: 16 inert native hook, 26 mock backend transport,
+site and runs 146 checks: 16 inert native hook, 26 mock backend transport,
 27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
-import checks. It requires exact PASS counts and completion sentinels because Drush
+import checks, plus 25 real HTTP authorization/CSRF/logout/session-revocation checks. It requires exact PASS counts and completion sentinels because Drush
 exit codes alone do not reliably indicate probe exceptions. No host ports or live
 provider requests are used. Cleanup removes the generated site/database/network.
 
-Prior private fixtures additionally covered six local TLS cases, real HTTP
-CSRF/logout/revocation and cooperating concurrent form saves. Those fixtures are
+HTTP checks log in through native forms with real cookies, reject unauthorized or
+invalid-CSRF submissions, preserve newer saves against stale forms, and reject
+preloaded forms after logout, permission revocation or server-side session deletion.
+Native controls independently verify routing and remove synthetic users/role/state.
+Settings bytes and mode are restored without copying credentials out of the fixture.
+
+Prior private fixtures additionally covered six local TLS cases and cooperating
+concurrent form saves. Those fixtures are
 not yet portable here and are not covered by this public CI claim.
 
 Remaining: full message/MIME and attachment compatibility; contributed mailer

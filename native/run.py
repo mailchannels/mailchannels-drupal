@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import time
 import uuid
+import sys
 root=Path(__file__).resolve().parents[1]
 prefix='mcdrupal-'+uuid.uuid4().hex[:10]
 work=root/'.native-work'/prefix
@@ -69,8 +70,15 @@ try:
         checks+=count
         print(f'{script}: {count} checks passed',flush=True)
     assert checks==121
-    print('DRUPAL_NATIVE_COMPLETE 121 checks',flush=True)
-    logs.append('DRUPAL_NATIVE_COMPLETE 121 checks')
+    # Register child servers in outer cleanup as well, including timeout paths.
+    workers.extend([prefix+'-http',prefix+'-http-client',prefix+'-http-control',prefix+'-http-settings'])
+    text=command([sys.executable,str(root/'native/http-session.py'),str(site),network,prefix],timeout=180)
+    assert 'HTTP_SESSION_RUN_COMPLETE 25 checks; settings restored' in text,text
+    assert sum(line.startswith('PASS ') for line in text.splitlines())==25,text
+    print('HTTP session fixture: 25 checks passed',flush=True)
+    checks+=25
+    print('DRUPAL_NATIVE_COMPLETE 146 checks',flush=True)
+    logs.append('DRUPAL_NATIVE_COMPLETE 146 checks')
 finally:
     cleanup_errors=[]
     for container in [*reversed(workers),database]:
