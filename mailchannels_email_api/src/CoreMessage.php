@@ -90,7 +90,7 @@ final class CoreMessage
             }
             $parameters[strtolower($match[1])] = strtolower($match[2] !== '' ? $match[2] : $match[3]);
         }
-        if (!in_array($parameters['charset'] ?? 'utf-8', ['utf-8', 'utf8'], TRUE)
+        if (!in_array($parameters['charset'] ?? 'utf-8', ['utf-8', 'utf8', 'us-ascii'], TRUE)
             || !in_array($parameters['format'] ?? 'fixed', ['fixed', 'flowed'], TRUE)
             || !in_array($parameters['delsp'] ?? 'no', ['yes', 'no'], TRUE)) {
             throw new \InvalidArgumentException('Unsupported plain-text encoding parameters.');
@@ -98,7 +98,8 @@ final class CoreMessage
         if ($contentType === 'text/html' && (isset($parameters['format']) || isset($parameters['delsp']))) {
             throw new \InvalidArgumentException('Flowed parameters are invalid for HTML.');
         }
-        if (isset($headers['content-transfer-encoding']) && strcasecmp($headers['content-transfer-encoding'], '8bit') !== 0) {
+        $transferEncoding = strtolower(trim($headers['content-transfer-encoding'] ?? '8bit'));
+        if (!in_array($transferEncoding, ['7bit', '8bit'], TRUE)) {
             throw new \InvalidArgumentException('Unsupported content transfer encoding.');
         }
         $from = self::addresses($headers['from'] ?? $message['from'] ?? '');
@@ -149,6 +150,10 @@ final class CoreMessage
             throw new \InvalidArgumentException('Invalid subject or unformatted body.');
         }
         $body = $message['body'];
+        if (($transferEncoding === '7bit' || ($parameters['charset'] ?? '') === 'us-ascii')
+            && preg_match('/[\x80-\xff]/', $body)) {
+            throw new \InvalidArgumentException('Mail body conflicts with ASCII encoding declaration.');
+        }
         if (!mb_check_encoding($body, 'UTF-8')) {
             throw new \InvalidArgumentException('Mail body must be UTF-8.');
         }

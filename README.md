@@ -60,3 +60,8 @@ support, HTML sanitization, or contributed Symfony mailer adapters.
 See [attachment compatibility notes](ATTACHMENTS.txt) for the observed contributed
 formats and remaining implementation requirements. The native adapter handles the documented byte/local-file formats; ambiguous or
 unsupported attachment representations reject before HTTP.
+
+Single-part text may declare UTF-8 or US-ASCII and use `8bit` or `7bit`
+transfer encoding. ASCII declarations are validated against body bytes;
+non-ASCII content must use UTF-8 with `8bit`. The API receives ordinary text,
+not base64 or quoted-printable MIME bodies. No raw multipart parsing is added.

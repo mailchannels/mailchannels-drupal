@@ -86,6 +86,13 @@ try {
   $htmlPayload=json_decode((string)$history[array_key_last($history)]['request']->getBody(),TRUE);
   verify_transport(array_column($htmlPayload['content'],'type')===['text/plain','text/html'] && str_contains($htmlPayload['content'][1]['value'],'<b>HTML</b>'),'native HTML JSON retains markup and plain alternative');
   verify_transport(str_contains($htmlPayload['content'][1]['value'],'http://default/fixture') && str_contains($htmlPayload['content'][0]['value'],'http://default/fixture'),'native HTML and plain alternative retain absolute link');
+  $ascii=$message;$ascii['headers']=['Content-Type'=>'text/plain; charset=us-ascii','Content-Transfer-Encoding'=>'7bit'];
+  $mock->append(new Response(202, [], $sent));$asciiBefore=count($history);
+  verify_transport($plugin->mail($ascii)===TRUE && count($history)===$asciiBefore+1,'native ASCII 7bit sends exactly once');
+  $asciiPayload=json_decode((string)$history[array_key_last($history)]['request']->getBody(),TRUE);
+  verify_transport($asciiPayload['content'][0]['value']===$message['body'],'native ASCII text serialized without transfer encoding');
+  $ascii['body']="caf\xc3\xa9";$asciiBefore=count($history);
+  verify_transport($plugin->mail($ascii)===FALSE && count($history)===$asciiBefore,'non-ASCII bytes under ASCII declaration reject before HTTP');
   foreach ([FALSE,TRUE] as $inParams) {
     $attachmentMessage=$message;$entry=['filecontent'=>['unsupported'],'filename'=>'fixture.txt','filemime'=>'text/plain'];
     if($inParams)$attachmentMessage['params']['attachment']=$entry;else $attachmentMessage['attachment']=$entry;
