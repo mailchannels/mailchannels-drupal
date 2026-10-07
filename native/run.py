@@ -77,8 +77,15 @@ try:
     assert sum(line.startswith('PASS ') for line in text.splitlines())==25,text
     print('HTTP session fixture: 25 checks passed',flush=True)
     checks+=25
-    print('DRUPAL_NATIVE_COMPLETE 146 checks',flush=True)
-    logs.append('DRUPAL_NATIVE_COMPLETE 146 checks')
+    workers.extend(prefix+'-concurrent-'+mode for mode in ['setup','first','second','cleanup'])
+    text=command([sys.executable,str(root/'native/concurrent-form.py'),str(site),network,prefix],timeout=180)
+    assert 'CONCURRENT_RUN_COMPLETE 15 checks' in text,text
+    assert sum(line.startswith('PASS ') for line in text.splitlines())==15,text
+    print('Concurrent form fixture: 15 checks passed',flush=True)
+    checks+=15
+    assert checks==161
+    print('DRUPAL_NATIVE_COMPLETE 161 checks',flush=True)
+    logs.append('DRUPAL_NATIVE_COMPLETE 161 checks')
 finally:
     cleanup_errors=[]
     for container in [*reversed(workers),database]:

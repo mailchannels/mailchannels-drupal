@@ -15,13 +15,13 @@ Drupal core is 11.4.8. These checks do not install a site or send email.
 
 Run the installed-site suite with `python native/run.py` after building the image.
 It installs locked dependencies into a new disposable directory, creates an internal
-Docker network and MariaDB 11.8.9, installs Drupal, and executes 146 native/HTTP checks.
+Docker network and MariaDB 11.8.9, installs Drupal, and executes 161 native/HTTP/concurrent checks.
 It publishes no host ports and disables PHP mail(). Dependencies download before
 the site enters the isolated network; all credentials are synthetic fixture values.
 The runner removes its named containers/network/site and retains results under
 ignored `.native-work/`. Never adapt it to point at a production site.
 
-TLS/concurrent/browser fixtures still need public portability. Keep
+TLS/browser fixtures still need public portability. Keep
 unsupported inputs explicit rather than silently losing message data.
 
 Composer validation keeps schema/lock checks strict while disabling the general
