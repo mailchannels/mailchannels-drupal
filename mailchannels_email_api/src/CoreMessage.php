@@ -15,6 +15,20 @@ final class CoreMessage
     public static function format(array $message): array
     {
         foreach ($message['headers'] ?? [] as $name => $value) {
+            if (is_string($name) && strcasecmp($name, 'Content-Transfer-Encoding') === 0
+                && is_string($value) && in_array(strtolower(trim($value)), ['base64', 'quoted-printable'], TRUE)) {
+                // Encoded MIME is already formatted. HTML conversion or wrapping
+                // would corrupt escape sequences and soft line breaks.
+                if (!is_array($message['body']) || count($message['body']) !== 1
+                    || !is_string(reset($message['body']))) {
+                    throw new \InvalidArgumentException('Encoded mail requires one serialized body string.');
+                }
+                $message['body'] = reset($message['body']);
+                $message['_mailchannels_core_flowed'] = FALSE;
+                return $message;
+            }
+        }
+        foreach ($message['headers'] ?? [] as $name => $value) {
             if (is_string($name) && strcasecmp($name, 'Content-Type') === 0
                 && is_string($value) && strtolower(trim(explode(';', $value)[0])) === 'text/html') {
                 // Drupal's MailInterface treats plain strings as text and only
@@ -99,7 +113,7 @@ final class CoreMessage
             throw new \InvalidArgumentException('Flowed parameters are invalid for HTML.');
         }
         $transferEncoding = strtolower(trim($headers['content-transfer-encoding'] ?? '8bit'));
-        if (!in_array($transferEncoding, ['7bit', '8bit'], TRUE)) {
+        if (!in_array($transferEncoding, ['7bit', '8bit', 'base64', 'quoted-printable'], TRUE)) {
             throw new \InvalidArgumentException('Unsupported content transfer encoding.');
         }
         $from = self::addresses($headers['from'] ?? $message['from'] ?? '');
@@ -149,7 +163,7 @@ final class CoreMessage
         if (!is_string($subject) || preg_match('/[\r\n\x00]/', $subject) || !is_string($message['body'] ?? null)) {
             throw new \InvalidArgumentException('Invalid subject or unformatted body.');
         }
-        $body = $message['body'];
+        $body = self::decodeTransfer($message['body'], $transferEncoding);
         if (($transferEncoding === '7bit' || ($parameters['charset'] ?? '') === 'us-ascii')
             && preg_match('/[\x80-\xff]/', $body)) {
             throw new \InvalidArgumentException('Mail body conflicts with ASCII encoding declaration.');
@@ -187,6 +201,25 @@ final class CoreMessage
             $payload['reply_to'] = $addresses[0];
         }
         return $payload;
+    }
+
+    private static function decodeTransfer(string $body, string $encoding): string
+    {
+        if ($encoding === 'base64') {
+            $compact = str_replace(["\r", "\n", "\t", ' '], '', $body);
+            $decoded = base64_decode($compact, TRUE);
+            if ($decoded === FALSE || base64_encode($decoded) !== $compact) {
+                throw new \InvalidArgumentException('Invalid base64 mail body.');
+            }
+            return $decoded;
+        }
+        if ($encoding === 'quoted-printable') {
+            if (preg_match('/[^\x09\x0a\x0d\x20-\x7e]|=(?![0-9a-fA-F]{2}|\r?\n)|\r(?!\n)|[ \t]+(?=\r?\n|$)/D', $body)) {
+                throw new \InvalidArgumentException('Invalid quoted-printable mail body.');
+            }
+            return quoted_printable_decode($body);
+        }
+        return $body;
     }
 
     private static function addresses(string $value): array

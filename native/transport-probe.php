@@ -93,6 +93,20 @@ try {
   verify_transport($asciiPayload['content'][0]['value']===$message['body'],'native ASCII text serialized without transfer encoding');
   $ascii['body']="caf\xc3\xa9";$asciiBefore=count($history);
   verify_transport($plugin->mail($ascii)===FALSE && count($history)===$asciiBefore,'non-ASCII bytes under ASCII declaration reject before HTTP');
+  foreach (['base64','quoted-printable'] as $encoding) {
+    $decoded='<p>private-message café =20</p>';
+    $encoded=$message;$encoded['headers']=['Content-Type'=>'text/html; charset=utf-8','Content-Transfer-Encoding'=>$encoding];
+    $encoded['body']=[$encoding==='base64'?base64_encode($decoded):quoted_printable_encode($decoded)];
+    $encoded=$plugin->format($encoded);
+    $mock->append(new Response(202, [], $sent));$encodedBefore=count($history);
+    verify_transport($plugin->mail($encoded)===TRUE && count($history)===$encodedBefore+1,'encoded native body sends once');
+    $encodedPayload=json_decode((string)$history[array_key_last($history)]['request']->getBody(),TRUE);
+    verify_transport($encodedPayload['content'][1]['value']===$decoded && !isset($encodedPayload['headers']['Content-Transfer-Encoding']),'decoded HTML serialized once without transfer header');
+    $encoded['headers']['Content-Type']='text/html; charset=us-ascii';$encodedBefore=count($history);
+    verify_transport($plugin->mail($encoded)===FALSE && count($history)===$encodedBefore,'decoded charset conflict rejects before HTTP');
+    $encoded['headers']['Content-Type']='text/html; charset=utf-8';$encoded['body']='private-message=XY';
+    verify_transport($plugin->mail($encoded)===FALSE && count($history)===$encodedBefore,'malformed encoding rejects before HTTP');
+  }
   foreach ([FALSE,TRUE] as $inParams) {
     $attachmentMessage=$message;$entry=['filecontent'=>['unsupported'],'filename'=>'fixture.txt','filemime'=>'text/plain'];
     if($inParams)$attachmentMessage['params']['attachment']=$entry;else $attachmentMessage['attachment']=$entry;

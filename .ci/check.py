@@ -7,9 +7,9 @@ base=['docker','run','--rm','--network','none','-v',str(root)+':/app:ro','-w','/
 for path in sorted((root/'mailchannels_email_api').rglob('*.php')):
     subprocess.run(base+['php','-l','/app/'+str(path.relative_to(root))],check=True)
 subprocess.run(base+['composer','validate','--strict','--no-check-publish','--no-check-all'],check=True)
-for script,count,sentinel in [('ascii-probe.php',12,'DRUPAL_ASCII_COMPLETE 12 checks'),('probe.php',19,'No mail()'),('flowed-probe.php',17,'FLOWED_PROBE_COMPLETE'),('headers-probe.php',20,'DRUPAL_HEADERS_COMPLETE 20 checks'),('envelope-probe.php',16,'DRUPAL_ENVELOPE_COMPLETE 16 checks'),('html-probe.php',17,'DRUPAL_HTML_COMPLETE 17 checks'),('attachment-probe.php',5,'ATTACHMENT_BOUNDARY_COMPLETE 5 checks')]:
+for script,count,sentinel in [('transfer-probe.php',37,'DRUPAL_TRANSFER_COMPLETE 37 checks'),('ascii-probe.php',12,'DRUPAL_ASCII_COMPLETE 12 checks'),('probe.php',19,'No mail()'),('flowed-probe.php',17,'FLOWED_PROBE_COMPLETE'),('headers-probe.php',20,'DRUPAL_HEADERS_COMPLETE 20 checks'),('envelope-probe.php',16,'DRUPAL_ENVELOPE_COMPLETE 16 checks'),('html-probe.php',17,'DRUPAL_HTML_COMPLETE 17 checks'),('attachment-probe.php',5,'ATTACHMENT_BOUNDARY_COMPLETE 5 checks')]:
     result=subprocess.run(base+['php','-d','disable_functions=mail',script],check=True,text=True,capture_output=True)
     print(result.stdout,end='')
     assert sum(line.startswith('PASS ') for line in result.stdout.splitlines())==count,script
     assert sentinel in result.stdout,script
-print('DRUPAL_PUBLIC_CHECKS_COMPLETE 106 checks')
+print('DRUPAL_PUBLIC_CHECKS_COMPLETE 143 checks')

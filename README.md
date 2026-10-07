@@ -61,7 +61,23 @@ See [attachment compatibility notes](ATTACHMENTS.txt) for the observed contribut
 formats and remaining implementation requirements. The native adapter handles the documented byte/local-file formats; ambiguous or
 unsupported attachment representations reject before HTTP.
 
-Single-part text may declare UTF-8 or US-ASCII and use `8bit` or `7bit`
-transfer encoding. ASCII declarations are validated against body bytes;
-non-ASCII content must use UTF-8 with `8bit`. The API receives ordinary text,
-not base64 or quoted-printable MIME bodies. No raw multipart parsing is added.
+## Serialized single-part MIME bodies
+
+Single-part text may declare UTF-8 or US-ASCII and use `8bit`, `7bit`, `base64`
+or `quoted-printable`. Encoded bodies supplied to `format()` must be an array
+containing exactly one already-serialized string. Direct `mail()` calls use the
+formatted string. Encoding declares serialized MIME, including intentional HTML;
+only trusted composition code should construct it. Ordinary unencoded HTML still
+uses the MarkupInterface/escaping rules above.
+
+The backend decodes transfer encoding once, validates the decoded charset, then
+interprets any explicit flowed parameters. It consumes the MIME transfer header;
+the API receives ordinary UTF-8 text. A `plain` alternative is already-decoded
+text and is never decoded using the HTML part's transfer header.
+
+Base64 must be canonical and padded when required; CR/LF/space/tab folding is
+accepted. Quoted-printable accepts hex escapes and CRLF/LF soft breaks, but rejects
+malformed escapes, raw non-ASCII bytes, bare CR and literal trailing whitespace
+(encode that whitespace as =20/=09). These strict input rules avoid silently
+repairing ambiguous mail. ASCII charset declarations are checked after decoding.
+Raw multipart MIME and arbitrary charset conversion remain unsupported.

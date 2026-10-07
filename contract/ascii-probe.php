@@ -18,8 +18,8 @@ foreach([
  ['text/plain; charset=utf-8','7bit',"caf\xc3\xa9"],
  ['text/html; charset=us-ascii','7bit',"<p>\xc3\xa9</p>"],
  ['text/plain; charset=iso-8859-1','8bit',"caf\xe9"],
- ['text/plain; charset=utf-8','base64','VGV4dA=='],
- ['text/plain; charset=utf-8','quoted-printable','Text=20body'],
+ ['text/plain; charset=utf-8','base64','VGV4dA=!'],
+ ['text/plain; charset=utf-8','quoted-printable','Text=XYbody'],
 ] as [$type,$encoding,$body]){
  $m=$base;$m['headers']=['Content-Type'=>$type,'Content-Transfer-Encoding'=>$encoding];$m['body']=$body;
  try{CoreMessage::payload($m);throw new RuntimeException('Expected encoding rejection');}

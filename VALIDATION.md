@@ -1,12 +1,12 @@
 # Validation scope
 
-Public CI currently runs 106 isolated conversion checks against locked Drupal 11.4.8:
+Public CI currently runs 143 isolated conversion checks against locked Drupal 11.4.8:
 19 core conversion, 17 flowed-text, 20 custom-header and 16 envelope-sender and 17 HTML checks, plus five attachment-boundary checks.
 It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
 The public native runner creates a fresh Drupal 11.4.8 site with MariaDB 11.8.9 or PostgreSQL 17.11
-site using the selected PHP image and runs 202 checks: 16 inert native hook, 34 mock backend transport,
+site using the selected PHP image and runs 210 checks: 16 inert native hook, 42 mock backend transport,
 27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
 import checks, plus 30 attachment-mapper checks, 28 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
 exit codes alone do not reliably indicate probe exceptions. No host ports or live
@@ -73,4 +73,14 @@ ASCII compatibility: 12 isolated cases cover text/plain and text/html with UTF-8
 or US-ASCII plus 7bit, invalid non-ASCII declarations, unsupported encoded bodies,
 and native formatter composition. Three additional native transport assertions
 cover one accepted ASCII request, exact ordinary text in JSON, and non-ASCII
-rejection before HTTP. This does not add multipart or transfer-decoding support.
+rejection before HTTP. These ASCII checks alone do not establish transfer decoding; the separate checks below cover that behavior. Multipart remains unsupported.
+
+
+Single-part transfer decoding
+37 isolated checks cover base64 and quoted-printable in plain/HTML content,
+exactly-once decoding, format preservation, folded base64 and soft line breaks,
+decoding before flowed conversion, malformed encodings, decoded UTF-8/ASCII
+validation and rejection of ambiguous body arrays. Eight added installed-site
+backend checks verify one HTTP request per valid encoded body, exact decoded HTML
+in JSON, and zero requests for malformed encoding or decoded charset conflicts.
+This does not establish multipart parsing or contributed-mailer compatibility.
