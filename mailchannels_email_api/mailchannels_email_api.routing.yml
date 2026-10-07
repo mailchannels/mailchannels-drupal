@@ -1,0 +1,7 @@
+mailchannels_email_api.settings:
+  path: '/admin/config/system/mailchannels-email-api'
+  defaults:
+    _form: '\Drupal\mailchannels_email_api\Form\SettingsForm'
+    _title: 'MailChannels Email API'
+  requirements:
+    _permission: 'administer mailchannels email api'

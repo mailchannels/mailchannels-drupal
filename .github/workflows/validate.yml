@@ -1,0 +1,22 @@
+name: Validate candidate
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  isolated-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build PHP environment
+        run: docker build -f .ci/Dockerfile -t mailchannels-drupal-tests:php83 .
+      - name: Install locked dependencies without plugins or scripts
+        run: docker run --rm -v "$PWD:/app" -w /app/contract mailchannels-drupal-tests:php83 composer install --no-interaction --prefer-dist --no-progress --no-plugins --no-scripts
+      - name: Isolated syntax and contract checks
+        run: python .ci/check.py
