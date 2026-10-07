@@ -42,7 +42,8 @@ final class CoreMessage
     public static function payload(array $message): array
     {
         // Reject unsupported message representations instead of silently losing data.
-        if (!empty($message['params']['attachments']) || !empty($message['attachments'])) {
+        if (!empty($message['params']['attachments']) || !empty($message['attachments'])
+            || !empty($message['params']['attachment']) || !empty($message['attachment'])) {
             throw new \InvalidArgumentException('Attachments require a separately validated representation.');
         }
         $headers = [];

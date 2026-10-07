@@ -86,6 +86,12 @@ try {
   $htmlPayload=json_decode((string)$history[array_key_last($history)]['request']->getBody(),TRUE);
   verify_transport(array_column($htmlPayload['content'],'type')===['text/plain','text/html'] && str_contains($htmlPayload['content'][1]['value'],'<b>HTML</b>'),'native HTML JSON retains markup and plain alternative');
   verify_transport(str_contains($htmlPayload['content'][1]['value'],'http://default/fixture') && str_contains($htmlPayload['content'][0]['value'],'http://default/fixture'),'native HTML and plain alternative retain absolute link');
+  foreach ([FALSE,TRUE] as $inParams) {
+    $attachmentMessage=$message;$entry=['filecontent'=>'private-attachment','filename'=>'fixture.txt','filemime'=>'text/plain'];
+    if($inParams)$attachmentMessage['params']['attachment']=$entry;else $attachmentMessage['attachment']=$entry;
+    $attachmentBefore=count($history);
+    verify_transport($plugin->mail($attachmentMessage)===FALSE && count($history)===$attachmentBefore,'singular attachment rejected before HTTP rather than dropped');
+  }
   $serializedLogs=json_encode($logs->entries);
   verify_transport(!str_contains($serializedLogs,'private-secret') && !str_contains($serializedLogs,'private-reset') && !str_contains($serializedLogs,'private-message'), 'module logs omit key body subject and exception data');
   print "TRANSPORT_PROBE_COMPLETE\n";

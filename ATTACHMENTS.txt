@@ -1,0 +1,40 @@
+Drupal attachment compatibility investigation — implementation remains open
+
+Core MailInterface defines message composition, headers and body but no standard
+attachment array. The installed Drupal11.4.8 PhpMail/SymfonyMailer implementations
+do not establish a universal attachment conversion contract for this API backend.
+Do not interpret core hook success as contributed-mailer attachment compatibility.
+
+Observed contributed conventions:
+1. Mime Mail: params.attachments is a list of dictionaries. filepath takes priority;
+   otherwise filecontent is required. filename defaults to the local basename or
+   attachment.dat. filemime can be guessed by Drupal's extension MIME service.
+   Duplicate paths or content are removed. Public/private/local-path reading,
+   provider payload size, lifecycle and duplicates need explicit native tests.
+2. Email Attachment Helper: params.attachment (single) or params.attachments (list),
+   with filecontent/filename/filemime. Optional disposition=inline and cid define
+   embedded content. It may itself rewrite body/headers into MIME, so accepting the
+   params alone does not prove compatibility when this module is installed.
+3. Mailer Plus/Symfony component transports are separate adapter routes. Do not
+   treat these arrays as their native Email/attachment contract.
+
+MailChannels maps base64 content plus filename/type; content_id selects inline
+handling and must be unique. Its current API schema limits attachment count to1000.
+A future adapter must retain binary bytes, filenames, MIME type, inline IDs and
+visible content references; account for duplicate semantics and size limits;
+reject ambiguous/unsupported representations before sending; and test native
+module interactions. File/URI resolution must use the intended Drupal services
+without silently enabling arbitrary remote fetches.
+
+Immediate defect fixed: nonempty singular params.attachment and top-level
+attachment previously escaped the plural-only rejection guard and could be lost.
+They now reject before HTTP, as plural attachments already did. Five conversion
+and two native mock-HTTP checks cover this boundary. This is failure prevention,
+not attachment support or completion of the compatibility requirement.
+
+Sources:
+https://api.drupal.org/api/drupal/core!lib!Drupal!Core!Mail!MailInterface.php/interface/MailInterface/11.x
+https://www.drupal.org/docs/contributed-modules/mime-mail/for-developers/file-attachments
+https://www.drupal.org/project/email_attachment
+https://docs.mailchannels.com/api-reference/send/send-an-email
+MailChannels Attachment schema and installed Drupal11.4.8 mail plugins.

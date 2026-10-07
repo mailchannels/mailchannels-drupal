@@ -56,3 +56,7 @@ plain-text format path retains core PhpMail behavior.
 
 This does not add attachment or raw multipart parsing, arbitrary transfer-encoding
 support, HTML sanitization, or contributed Symfony mailer adapters.
+
+See [attachment compatibility notes](ATTACHMENTS.txt) for the observed contributed
+formats and remaining implementation requirements. Nonempty singular or plural
+attachment inputs reject before HTTP; they are never intentionally dropped.

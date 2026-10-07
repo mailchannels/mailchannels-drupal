@@ -16,7 +16,7 @@ Drupal core is 11.4.8. These checks do not install a site or send email.
 Install `cryptography==45.0.3` in a Python virtual environment for temporary test
 certificate generation, then run `python native/run.py` after building the image.
 It installs locked dependencies into a new disposable directory, creates an internal
-Docker network and MariaDB 11.8.9, installs Drupal, and executes 164 native/HTTP/concurrent checks plus six local TLS scenarios.
+Docker network and MariaDB 11.8.9, installs Drupal, and executes 166 native/HTTP/concurrent checks plus six local TLS scenarios.
 It publishes no host ports and disables PHP mail(). Dependencies download before
 the site enters the isolated network; all credentials are synthetic fixture values.
 The runner removes its named containers/network/site and retains results under
