@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Drupal\mailchannels_email_api;
 
 use Drupal\Core\Mail\MailFormatHelper;
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Utility\Html;
 use Symfony\Component\Mime\Address;
 
 /** Core MailInterface conversion candidate; transport-independent. */
@@ -12,6 +14,26 @@ final class CoreMessage
 {
     public static function format(array $message): array
     {
+        foreach ($message['headers'] ?? [] as $name => $value) {
+            if (is_string($name) && strcasecmp($name, 'Content-Type') === 0
+                && is_string($value) && strtolower(trim(explode(';', $value)[0])) === 'text/html') {
+                // Drupal's MailInterface treats plain strings as text and only
+                // MarkupInterface instances as intentional HTML.
+                $parts = [];
+                foreach ($message['body'] as $part) {
+                    if (!$part instanceof MarkupInterface && !is_string($part)) {
+                        throw new \InvalidArgumentException('Unsupported mail body part.');
+                    }
+                    if (!mb_check_encoding((string) $part, 'UTF-8')) {
+                        throw new \InvalidArgumentException('Mail body must be UTF-8.');
+                    }
+                    $parts[] = $part instanceof MarkupInterface ? (string) $part : Html::escape($part);
+                }
+                $message['body'] = implode("\n\n", $parts);
+                $message['_mailchannels_core_flowed'] = FALSE;
+                return $message;
+            }
+        }
         $message['body'] = MailFormatHelper::htmlToText(implode("\n\n", $message['body']));
         $message['_mailchannels_core_flowed'] = TRUE;
         return $message;
@@ -54,8 +76,9 @@ final class CoreMessage
         }
         $parameters = [];
         $typeParts = explode(';', $headers['content-type'] ?? 'text/plain');
-        if (strtolower(trim(array_shift($typeParts))) !== 'text/plain') {
-            throw new \InvalidArgumentException('Only core plain-text mail is supported by this candidate.');
+        $contentType = strtolower(trim(array_shift($typeParts)));
+        if (!in_array($contentType, ['text/plain', 'text/html'], TRUE)) {
+            throw new \InvalidArgumentException('Unsupported mail content type.');
         }
         foreach ($typeParts as $part) {
             if (!preg_match('/^\s*(charset|format|delsp)\s*=\s*(?:"([a-z0-9-]+)"|([a-z0-9-]+))\s*$/i', $part, $match)
@@ -68,6 +91,9 @@ final class CoreMessage
             || !in_array($parameters['format'] ?? 'fixed', ['fixed', 'flowed'], TRUE)
             || !in_array($parameters['delsp'] ?? 'no', ['yes', 'no'], TRUE)) {
             throw new \InvalidArgumentException('Unsupported plain-text encoding parameters.');
+        }
+        if ($contentType === 'text/html' && (isset($parameters['format']) || isset($parameters['delsp']))) {
+            throw new \InvalidArgumentException('Flowed parameters are invalid for HTML.');
         }
         if (isset($headers['content-transfer-encoding']) && strcasecmp($headers['content-transfer-encoding'], '8bit') !== 0) {
             throw new \InvalidArgumentException('Unsupported content transfer encoding.');
@@ -123,11 +149,20 @@ final class CoreMessage
         if (!mb_check_encoding($body, 'UTF-8')) {
             throw new \InvalidArgumentException('Mail body must be UTF-8.');
         }
-        if (!empty($message['_mailchannels_core_flowed']) || ($parameters['format'] ?? '') === 'flowed') {
+        if ($contentType === 'text/plain' && (!empty($message['_mailchannels_core_flowed']) || ($parameters['format'] ?? '') === 'flowed')) {
             $body = FlowedText::decode($body, !empty($message['_mailchannels_core_flowed']) || ($parameters['delsp'] ?? 'no') === 'yes');
         }
+        $content = [['type' => 'text/plain', 'value' => $body]];
+        if ($contentType === 'text/html') {
+            $plain = array_key_exists('plain', $message) ? $message['plain']
+                : FlowedText::decode(MailFormatHelper::htmlToText($body), TRUE);
+            if (!is_string($plain) || !mb_check_encoding($plain, 'UTF-8')) {
+                throw new \InvalidArgumentException('Invalid plain-text alternative.');
+            }
+            $content = [['type' => 'text/plain', 'value' => $plain], ['type' => 'text/html', 'value' => $body]];
+        }
         $payload = ['from' => $from[0], 'personalizations' => [$personalization], 'subject' => $subject,
-            'content' => [['type' => 'text/plain', 'value' => $body]]];
+            'content' => $content];
         if ($envelope !== NULL) {
             $payload['envelope_from'] = $envelope;
         }

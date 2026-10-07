@@ -1,5 +1,6 @@
 <?php
 function visibility_probe_mail($key, &$message, $params) {
   $message['subject'] = 'Fixture ✓ ' . $key;
+  if (!empty($params['html'])) $message['headers']['Content-Type'] = 'text/html; charset=UTF-8';
   $message['body'][] = $params['body'];
 }

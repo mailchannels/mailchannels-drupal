@@ -80,6 +80,12 @@ try {
   $mock->append(new Response(202, [], $sent));
   $result = $manager->mail('visibility_probe', 'transport', 'recipient@example.com', 'en', ['body'=>'Native candidate HTTP boundary']);
   verify_transport($result['result'] === TRUE && count($history)===$before+1, 'native manager selects actual candidate and sends once');
+  $mock->append(new Response(202, [], $sent));$htmlBefore=count($history);
+  $htmlResult=$manager->mail('visibility_probe','html','recipient@example.com','en',['html'=>TRUE,'body'=>\Drupal\Core\Render\Markup::create('<p>Native <b>HTML</b> <a href="/fixture">link</a></p>')]);
+  verify_transport($htmlResult['result']===TRUE && count($history)===$htmlBefore+1,'native HTML workflow sends once');
+  $htmlPayload=json_decode((string)$history[array_key_last($history)]['request']->getBody(),TRUE);
+  verify_transport(array_column($htmlPayload['content'],'type')===['text/plain','text/html'] && str_contains($htmlPayload['content'][1]['value'],'<b>HTML</b>'),'native HTML JSON retains markup and plain alternative');
+  verify_transport(str_contains($htmlPayload['content'][1]['value'],'http://default/fixture') && str_contains($htmlPayload['content'][0]['value'],'http://default/fixture'),'native HTML and plain alternative retain absolute link');
   $serializedLogs=json_encode($logs->entries);
   verify_transport(!str_contains($serializedLogs,'private-secret') && !str_contains($serializedLogs,'private-reset') && !str_contains($serializedLogs,'private-message'), 'module logs omit key body subject and exception data');
   print "TRANSPORT_PROBE_COMPLETE\n";

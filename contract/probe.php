@@ -38,7 +38,7 @@ check($payload['reply_to']['email'] === 'visitor@example.com', 'visitor Reply-To
 $second = $message; $second['body'] = 'Different token';
 check(CoreMessage::payload($message) !== CoreMessage::payload($second), 'same Drupal type ID does not collapse distinct mail');
 foreach ([['to'=>''], ['subject'=>"bad\r\nBcc: private-token@example.com"], ['attachments'=>['file']], ['params'=>['attachments'=>['file']]]] as $change) { rejects(array_replace($message, $change), 'unsupported message rejected'); }
-foreach (['Reply-To'=>'one@example.com, two@example.com', 'Message-ID'=>'private-token', 'Content-Type'=>'text/html', 'Content-Transfer-Encoding'=>'base64', 'Return-Path'=>'one@example.com, two@example.com', 'To'=>'other@example.com', 'reply-to'=>'duplicate@example.com'] as $name=>$value) {
+foreach (['Reply-To'=>'one@example.com, two@example.com', 'Message-ID'=>'private-token', 'Content-Type'=>'multipart/mixed; boundary=fixture', 'Content-Transfer-Encoding'=>'base64', 'Return-Path'=>'one@example.com, two@example.com', 'To'=>'other@example.com', 'reply-to'=>'duplicate@example.com'] as $name=>$value) {
     $bad=$message; $bad['headers'][$name]=$value; rejects($bad, 'unsupported or conflicting header rejected');
 }
 echo "No mail(), network call, installed Drupal site or workflow validation performed.\n";
