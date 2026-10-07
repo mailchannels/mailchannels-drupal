@@ -5,12 +5,16 @@ Public CI currently runs 72 isolated conversion checks against locked Drupal 11.
 It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
-Prior private development fixtures used Drupal 11.4.8, PHP 8.3.35 and MariaDB 11.8.9.
-They covered native user/contact hooks and mock HTTP transport; six local TLS cases;
-configuration forms, CSRF/logout/revocation; cooperating concurrent form saves;
-and config import/uninstall. Those fixtures and their evidence are not yet portable
-here. Maintainers must reproduce them before approval; this document is not a CI
-substitute or a claim that the public checks cover those paths.
+The public native runner creates a fresh Drupal 11.4.8/PHP 8.3.35/MariaDB 11.8.9
+site and runs 121 checks: 16 inert native hook, 26 mock backend transport,
+27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
+import checks. It requires exact PASS counts and completion sentinels because Drush
+exit codes alone do not reliably indicate probe exceptions. No host ports or live
+provider requests are used. Cleanup removes the generated site/database/network.
+
+Prior private fixtures additionally covered six local TLS cases, real HTTP
+CSRF/logout/revocation and cooperating concurrent form saves. Those fixtures are
+not yet portable here and are not covered by this public CI claim.
 
 Remaining: full message/MIME and attachment compatibility; contributed mailer
 adapters; supported runtime matrix; browser/accessibility; time-based session expiry;

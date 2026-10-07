@@ -1,0 +1,5 @@
+name: Visibility mail contract probe
+type: module
+description: 'Test-only inert mail collector; never use for real delivery.'
+package: Testing
+core_version_requirement: ^11

@@ -1,0 +1,5 @@
+<?php
+function visibility_probe_mail($key, &$message, $params) {
+  $message['subject'] = 'Fixture ✓ ' . $key;
+  $message['body'][] = $params['body'];
+}

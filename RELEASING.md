@@ -9,7 +9,7 @@ by this candidate's existence. Support contact: dev@mailchannels.com.
 2. Verify project/machine-name availability and ownership on Drupal.org before
    registering names. Review licensing, project-description and security-coverage
    requirements; do not claim advisory coverage without approval.
-3. Port native fixtures into public reproducible CI, complete the remaining scope
+3. Port remaining HTTP/TLS/concurrency fixtures into public CI, complete the remaining scope
    in VALIDATION.md, and obtain implementation/security review.
 4. Validate authorized provider behavior in an isolated site. Review sender-domain
    SPF/Domain Lockdown and uncertain acceptance handling. Keep credentials secret.

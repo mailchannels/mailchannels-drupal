@@ -13,10 +13,16 @@ Dependency installation needs network access; all conversion probes and PHP synt
 checks run with Docker networking disabled and PHP mail() disabled. The locked
 Drupal core is 11.4.8. These checks do not install a site or send email.
 
-Native database/browser/HTTP fixtures are not yet portable in this repository.
-Port that evidence into reproducible public CI before treating this draft as ready
-for implementation review. Keep unsupported inputs explicit rather than silently
-losing headers, recipients or attachments.
+Run the installed-site suite with `python native/run.py` after building the image.
+It installs locked dependencies into a new disposable directory, creates an internal
+Docker network and MariaDB 11.8.9, installs Drupal, and executes 121 native checks.
+It publishes no host ports and disables PHP mail(). Dependencies download before
+the site enters the isolated network; all credentials are synthetic fixture values.
+The runner removes its named containers/network/site and retains results under
+ignored `.native-work/`. Never adapt it to point at a production site.
+
+Real HTTP/TLS/concurrent/browser fixtures still need public portability. Keep
+unsupported inputs explicit rather than silently losing message data.
 
 Composer validation keeps schema/lock checks strict while disabling the general
 version-range recommendation: the test fixture intentionally pins Drupal 11.4.8.
