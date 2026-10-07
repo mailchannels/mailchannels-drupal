@@ -30,5 +30,7 @@ jobs:
           python-version: '3.12'
       - name: Build PHP environment
         run: docker build -f .ci/Dockerfile -t mailchannels-drupal-tests:php83 .
+      - name: Install certificate-fixture dependency
+        run: python -m pip install cryptography==45.0.3
       - name: Fresh isolated Drupal and MariaDB fixture
         run: python native/run.py

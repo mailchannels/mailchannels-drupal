@@ -84,8 +84,13 @@ try:
     print('Concurrent form fixture: 15 checks passed',flush=True)
     checks+=15
     assert checks==161
-    print('DRUPAL_NATIVE_COMPLETE 161 checks',flush=True)
-    logs.append('DRUPAL_NATIVE_COMPLETE 161 checks')
+    workers.extend([prefix+'-tls',prefix+'-tls-client'])
+    text=command([sys.executable,str(root/'tls/run.py'),str(site),network,prefix],timeout=180)
+    assert 'TLS_PROBE_COMPLETE' in text and 'TLS_FIXTURE_CLEANUP_COMPLETE' in text,text
+    assert sum(line.startswith('PASS ') for line in text.splitlines())==6,text
+    print('TLS fixture: 6 scenarios passed',flush=True)
+    print('DRUPAL_NATIVE_COMPLETE 161 checks + 6 TLS scenarios',flush=True)
+    logs.append('DRUPAL_NATIVE_COMPLETE 161 checks + 6 TLS scenarios')
 finally:
     cleanup_errors=[]
     for container in [*reversed(workers),database]:

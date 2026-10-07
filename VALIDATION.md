@@ -24,8 +24,19 @@ The contending save is rejected; after the first commits, the second's stale sna
 is rejected; a fresh form succeeds. Lock release and routing restoration are checked.
 This verifies cooperating form saves, not unrelated writers, expiry or crash recovery.
 
-Prior private fixtures additionally covered six local TLS cases. Those fixtures are
-not yet portable here and are not covered by this public CI claim.
+Six local TLS scenarios additionally exercise the actual plugin with Guzzle's
+synchronous CurlHandler: trusted chain/name succeeds; wrong host, expired leaf and
+untrusted chain reject before any HTTP request; redirects are not followed; a
+pre-header stall returns FALSE near the 15-second deadline after one received
+request and no retry. FALSE in that case means uncertain acceptance.
+
+Each run generates temporary fixture certificates and places the provider hostname
+alias only on its internal Docker network. The client trusts the fixture CA only
+through per-process curl.cainfo; no host DNS/trust changes or real provider traffic.
+The server records path and matching-field booleans, not credentials or messages.
+Temporary keys, client/server containers and generated site/network are removed.
+This covers Linux/PHP8.3/CurlHandler/HTTP1.1, not other handlers, HTTP2, every timeout
+phase, production middleware or delivered email.
 
 Remaining: full message/MIME and attachment compatibility; contributed mailer
 adapters; supported runtime matrix; browser/accessibility; time-based session expiry;
