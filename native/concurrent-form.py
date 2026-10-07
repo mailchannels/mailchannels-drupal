@@ -20,7 +20,7 @@ with tempfile.TemporaryDirectory(prefix=run_id) as sync:
         return ['docker','run','--rm','--name',run_id+'-'+mode,'--network',network,
                 '-v',str(site)+':/app','-v',str(fixture)+':/candidate:ro',
                 '-v',sync+':/sync','-w','/app','-e','DRUPAL_CONCURRENT_MODE='+mode,
-                'mailchannels-drupal-tests:php83','php','-d','disable_functions=mail',
+                os.environ.get('DRUPAL_TEST_IMAGE', 'mailchannels-drupal-tests:php83'),'php','-d','disable_functions=mail',
                 'vendor/drush/drush/drush.php','php:script','/candidate/native/concurrent-form-probe.php']
     def verify(mode,result,count):
         text=result.stdout+result.stderr

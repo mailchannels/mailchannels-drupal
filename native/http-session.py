@@ -15,7 +15,7 @@ name=sys.argv[3]+'-http'
 assert network.startswith('mcdrupal-') and name.startswith('mcdrupal-')
 base=['docker','run','--rm','--network',network,'-v',str(site)+':/app','-v',str(fixture)+':/candidate:ro','-w','/app']
 def drush(script,env=None,sentinel=None):
-    cmd=base[:3]+['--name',name+'-control']+base[3:]+sum((['-e',k+'='+v] for k,v in (env or {}).items()),[])+['mailchannels-drupal-tests:php83','php','-d','disable_functions=mail','vendor/drush/drush/drush.php','php:script','/candidate/native/'+script]
+    cmd=base[:3]+['--name',name+'-control']+base[3:]+sum((['-e',k+'='+v] for k,v in (env or {}).items()),[])+[os.environ.get('DRUPAL_TEST_IMAGE', 'mailchannels-drupal-tests:php83'),'php','-d','disable_functions=mail','vendor/drush/drush/drush.php','php:script','/candidate/native/'+script]
     r=subprocess.run(cmd,capture_output=True,text=True,timeout=60)
     text=r.stdout+r.stderr
     assert r.returncode==0 and sentinel in text,text
@@ -30,7 +30,7 @@ setup=False
 try:
     drush('http-form-setup.php',sentinel='HTTP_FIXTURE_READY');setup=True
     fixture_settings('apply')
-    subprocess.run(base[:3]+['-d','--name',name]+base[3:-2]+['-w','/app/web','mailchannels-drupal-tests:php83','php','-d','disable_functions=mail','-S','0.0.0.0:18378','.ht.router.php'],check=True,capture_output=True)
+    subprocess.run(base[:3]+['-d','--name',name]+base[3:-2]+['-w','/app/web',os.environ.get('DRUPAL_TEST_IMAGE', 'mailchannels-drupal-tests:php83'),'php','-d','disable_functions=mail','-S','0.0.0.0:18378','.ht.router.php'],check=True,capture_output=True)
     with tempfile.TemporaryDirectory(prefix=name) as syncdir:
         os.chmod(syncdir,0o777)
         client=subprocess.Popen(['docker','run','--rm','--name',name+'-client','--network',network,'-v',str(fixture)+':/candidate:ro','-v',syncdir+':/sync','-e','DRUPAL_SESSION_SYNC=/sync','-e','DRUPAL_FIXTURE_ORIGIN=http://'+name+':18378','python:3.12-slim','python','/candidate/native/http-form-probe.py'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)

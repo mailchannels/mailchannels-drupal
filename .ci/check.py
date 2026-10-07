@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import os
 from pathlib import Path
 import subprocess
 root=Path(__file__).resolve().parents[1]
-base=['docker','run','--rm','--network','none','-v',str(root)+':/app:ro','-w','/app/contract','mailchannels-drupal-tests:php83']
+base=['docker','run','--rm','--network','none','-v',str(root)+':/app:ro','-w','/app/contract',os.environ.get('DRUPAL_TEST_IMAGE', 'mailchannels-drupal-tests:php83')]
 for path in sorted((root/'mailchannels_email_api').rglob('*.php')):
     subprocess.run(base+['php','-l','/app/'+str(path.relative_to(root))],check=True)
 subprocess.run(base+['composer','validate','--strict','--no-check-publish','--no-check-all'],check=True)

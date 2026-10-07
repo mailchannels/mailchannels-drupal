@@ -43,7 +43,7 @@ with tempfile.TemporaryDirectory(prefix=prefix+'-tls-') as temporary:
                 if 'READY' in run(['docker','logs',name]).stdout:break
                 time.sleep(.2)
             else:raise RuntimeError('TLS fixture did not become ready')
-            result=run(['docker','run','--rm','--name',prefix+'-tls-client','--network',network,'-v',str(candidate)+':/candidate:ro','-v',str(site)+':/app:ro','-v',str(out)+':/fixtures:ro','mailchannels-drupal-tests:php83','php','-d','disable_functions=mail','-d','curl.cainfo=/fixtures/ca.crt','/candidate/tls/client.php'],timeout=30)
+            result=run(['docker','run','--rm','--name',prefix+'-tls-client','--network',network,'-v',str(candidate)+':/candidate:ro','-v',str(site)+':/app:ro','-v',str(out)+':/fixtures:ro',os.environ.get('DRUPAL_TEST_IMAGE', 'mailchannels-drupal-tests:php83'),'php','-d','disable_functions=mail','-d','curl.cainfo=/fixtures/ca.crt','/candidate/tls/client.php'],timeout=30)
             value=json.loads(result.stdout)
             observed=[json.loads(line) for line in records.read_text().splitlines()] if records.exists() else []
             assert value['accepted']==(scenario=='trusted'),(scenario,value)
