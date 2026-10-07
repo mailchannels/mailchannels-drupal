@@ -27,3 +27,19 @@ unsupported inputs explicit rather than silently losing message data.
 
 Composer validation keeps schema/lock checks strict while disabling the general
 version-range recommendation: the test fixture intentionally pins Drupal 11.4.8.
+
+To exercise another configured PHP runtime, build and select its image explicitly:
+
+```sh
+export DRUPAL_TEST_IMAGE=mailchannels-drupal-tests:php8.4.26
+docker build --build-arg PHP_VERSION=8.4.26 -f .ci/Dockerfile -t "$DRUPAL_TEST_IMAGE" .
+docker run --rm -v "$PWD:/app" -w /app/contract "$DRUPAL_TEST_IMAGE" composer install --no-interaction --prefer-dist --no-progress --no-plugins --no-scripts
+python .ci/check.py
+python native/run.py
+```
+
+CI configures both suites for PHP 8.3.35, 8.4.26 and 8.5.11. Every child PHP
+container (including HTTP server, concurrency workers and TLS client) inherits the
+selected image. The default without DRUPAL_TEST_IMAGE remains the original php83
+image. Check the current commit's CI results before treating any matrix cell as
+validated; a configured job alone is not evidence of passing tests.

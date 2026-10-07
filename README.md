@@ -1,6 +1,6 @@
 # MailChannels Email API for Drupal — candidate
 
-Unreleased implementation for Drupal 11.4 and PHP 8.3. **Not production-ready or
+Unreleased implementation for Drupal 11.4 with a PHP 8.3–8.5 validation matrix. **Not production-ready or
 listed on Drupal.org.** Package and project names are provisional. Support:
 [dev@mailchannels.com](mailto:dev@mailchannels.com). GPL-2.0-or-later.
 

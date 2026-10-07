@@ -5,8 +5,8 @@ Public CI currently runs 94 isolated conversion checks against locked Drupal 11.
 It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
-The public native runner creates a fresh Drupal 11.4.8/PHP 8.3.35/MariaDB 11.8.9
-site and runs 196 checks: 16 inert native hook, 31 mock backend transport,
+The public native runner creates a fresh Drupal 11.4.8/MariaDB 11.8.9
+site using the selected PHP image and runs 196 checks: 16 inert native hook, 31 mock backend transport,
 27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
 import checks, plus 30 attachment-mapper checks, 25 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
 exit codes alone do not reliably indicate probe exceptions. No host ports or live
@@ -35,12 +35,20 @@ alias only on its internal Docker network. The client trusts the fixture CA only
 through per-process curl.cainfo; no host DNS/trust changes or real provider traffic.
 The server records path and matching-field booleans, not credentials or messages.
 Temporary keys, client/server containers and generated site/network are removed.
-This covers Linux/PHP8.3/CurlHandler/HTTP1.1, not other handlers, HTTP2, every timeout
+The configured matrix covers Linux/PHP8.3–8.5/CurlHandler/HTTP1.1; passing results
+are required for each runtime. It does not cover other handlers, HTTP2, every timeout
 phase, production middleware or delivered email.
 
 Remaining: full message/MIME and contributed-module attachment compatibility; contributed mailer
-adapters; supported runtime matrix; browser/accessibility; time-based session expiry;
+adapters; broader Drupal/database/runtime coverage; browser/accessibility; time-based session expiry;
 concurrent imports and recovery; production middleware review; authorized provider
 validation and domain authorization; packaging/release review and directory acceptance.
 The code can return FALSE after an uncertain network outcome. Drupal's boolean
 MailInterface cannot communicate acceptance certainty; do not retry blindly.
+
+Runtime matrix configuration: PHP 8.3.35, 8.4.26 and 8.5.11, with both the isolated
+and fresh-site suites for each. Drupal documents PHP 8.3, 8.4 and 8.5 support for
+11.4: https://www.drupal.org/docs/getting-started/system-requirements/php-requirements
+The runner prints its actual PHP version; verify the current commit's results and
+cleanup sentinel in each job. This matrix does not claim Drupal 10/12 compatibility
+or cover alternative databases and production web-server deployments.
