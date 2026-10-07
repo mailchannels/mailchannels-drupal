@@ -44,8 +44,7 @@ try:
         '-e','COMPOSER_ALLOW_SUPERUSER=1',os.environ.get('DRUPAL_TEST_IMAGE', 'mailchannels-drupal-tests:php83'),
         'composer','install','--no-interaction','--prefer-dist','--no-progress'],timeout=300)
     # Container-owned scaffold directories also work under rootful CI Docker.
-    copy_code="import os
-from pathlib import Path; import shutil; d=Path('/app/web/modules/custom'); d.mkdir(parents=True,exist_ok=True); shutil.copytree('/candidate/mailchannels_email_api',d/'mailchannels_email_api'); shutil.copytree('/candidate/native/probe_module',d/'visibility_probe')"
+    copy_code="from pathlib import Path; import shutil; d=Path('/app/web/modules/custom'); d.mkdir(parents=True,exist_ok=True); shutil.copytree('/candidate/mailchannels_email_api',d/'mailchannels_email_api'); shutil.copytree('/candidate/native/probe_module',d/'visibility_probe')"
     command(['docker','run','--rm','--network','none','-v',str(site)+':/app',
         '-v',str(root)+':/candidate:ro','python:3.12-slim','python','-c',copy_code])
     command(['docker','network','create','--internal',network]);created_network=True
@@ -60,8 +59,7 @@ from pathlib import Path; import shutil; d=Path('/app/web/modules/custom'); d.mk
     php('site:install','minimal','--db-url=mysql://drupal:isolated-db-only@'+database+'/drupal',
         '--account-name=fixture-admin','--account-pass=isolated-admin-only',
         '--account-mail=admin@example.com','--site-mail=sender@example.com','--site-name=Isolated fixture','-y')
-    private_setup="import os
-from pathlib import Path; p=Path('/app/web/sites/default/settings.php'); m=p.stat().st_mode & 0o777; p.chmod(0o600); p.write_bytes(p.read_bytes()+b'\\n$settings[\"file_private_path\"]=\"/app/private\";\\n'); p.chmod(m); Path('/app/private').mkdir()"
+    private_setup="from pathlib import Path; p=Path('/app/web/sites/default/settings.php'); m=p.stat().st_mode & 0o777; p.chmod(0o600); p.write_bytes(p.read_bytes()+b'\\n$settings[\"file_private_path\"]=\"/app/private\";\\n'); p.chmod(m); Path('/app/private').mkdir()"
     command(['docker','run','--rm','--network','none','-v',str(site)+':/app',
         'python:3.12-slim','python','-c',private_setup])
     php('en','visibility_probe','contact','mailchannels_email_api','-y')
@@ -106,8 +104,7 @@ finally:
         exists=subprocess.run(['docker','container','inspect',container],capture_output=True).returncode==0
         if exists and subprocess.run(['docker','rm','-f',container],capture_output=True).returncode:cleanup_errors.append(container)
     if created_network and subprocess.run(['docker','network','rm',network],capture_output=True).returncode:cleanup_errors.append(network)
-    cleanup_code="import os
-from pathlib import Path; import shutil; [(shutil.rmtree(p) if p.is_dir() and not p.is_symlink() else p.unlink()) for p in Path('/fixture').iterdir()]"
+    cleanup_code="from pathlib import Path; import shutil; [(shutil.rmtree(p) if p.is_dir() and not p.is_symlink() else p.unlink()) for p in Path('/fixture').iterdir()]"
     if subprocess.run(['docker','run','--rm','--network','none','-v',str(site)+':/fixture','python:3.12-slim','python','-c',cleanup_code],capture_output=True).returncode:cleanup_errors.append(str(site))
     else:site.rmdir()
     logs.append('DRUPAL_NATIVE_CLEANUP_COMPLETE' if not cleanup_errors else 'CLEANUP_FAILED '+repr(cleanup_errors))
