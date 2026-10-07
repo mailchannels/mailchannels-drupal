@@ -39,12 +39,14 @@ final class CoreMessage
         return $message;
     }
 
-    public static function payload(array $message): array
+    public static function payload(array $message, ?callable $attachmentMapper = NULL): array
     {
-        // Reject unsupported message representations instead of silently losing data.
+        $attachments = [];
+        // Resolve only through an explicitly supplied native attachment adapter.
         if (!empty($message['params']['attachments']) || !empty($message['attachments'])
             || !empty($message['params']['attachment']) || !empty($message['attachment'])) {
-            throw new \InvalidArgumentException('Attachments require a separately validated representation.');
+            if ($attachmentMapper === NULL) throw new \InvalidArgumentException('Attachment adapter required.');
+            $attachments = $attachmentMapper($message);
         }
         $headers = [];
         $customHeaders = [];
@@ -164,6 +166,7 @@ final class CoreMessage
         }
         $payload = ['from' => $from[0], 'personalizations' => [$personalization], 'subject' => $subject,
             'content' => $content];
+        if ($attachments) $payload['attachments'] = $attachments;
         if ($envelope !== NULL) {
             $payload['envelope_from'] = $envelope;
         }

@@ -17,7 +17,7 @@ See [VALIDATION.md](VALIDATION.md) for precisely scoped evidence and remaining w
 [CONTRIBUTING.md](CONTRIBUTING.md) for isolated checks, and
 [RELEASING.md](RELEASING.md) for publisher setup and release gates.
 
-This candidate deliberately rejects unsupported attachments, raw multipart MIME representations,
+This candidate deliberately rejects raw multipart MIME representations,
 multiple Reply-To addresses and distinct visible/envelope recipients. These gaps
 remain work to complete, not a claim of full Drupal mailer compatibility.
 No retries or SMTP fallback are installed. A FALSE mail result can represent
@@ -54,9 +54,9 @@ The API receives a plain-text alternative followed by HTML. An explicit formatte
 it, with flowed wrapping decoded so long links remain intact. The ordinary
 plain-text format path retains core PhpMail behavior.
 
-This does not add attachment or raw multipart parsing, arbitrary transfer-encoding
+This does not add raw multipart parsing, arbitrary transfer-encoding
 support, HTML sanitization, or contributed Symfony mailer adapters.
 
 See [attachment compatibility notes](ATTACHMENTS.txt) for the observed contributed
-formats and remaining implementation requirements. Nonempty singular or plural
-attachment inputs reject before HTTP; they are never intentionally dropped.
+formats and remaining implementation requirements. The native adapter handles the documented byte/local-file formats; ambiguous or
+unsupported attachment representations reject before HTTP.

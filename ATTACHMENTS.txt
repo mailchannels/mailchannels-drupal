@@ -38,3 +38,31 @@ https://www.drupal.org/docs/contributed-modules/mime-mail/for-developers/file-at
 https://www.drupal.org/project/email_attachment
 https://docs.mailchannels.com/api-reference/send/send-an-email
 MailChannels Attachment schema and installed Drupal11.4.8 mail plugins.
+
+Implemented native adapter (supersedes the earlier rejection-only status):
+- One unambiguous source: top-level or params attachment(single)/attachments(list).
+- filecontent carries raw binary bytes, base64-encoded exactly once for the API.
+- filepath takes precedence, using Drupal file_system realpath. Local paths and
+  public/private/temporary/file wrappers are supported; remote/custom schemes and
+  non-local resolution are rejected. A filename alone is never treated as a path.
+- filename defaults to path basename or attachment.dat. filemime is passed through
+  or guessed with Drupal's MIME service. Explicit filemime is recommended: Drupal
+  may classify .dat as chemical/x-mopac-input rather than application/octet-stream.
+- disposition=inline requires a valid unique cid, mapped to content_id. A cid with
+  attachment disposition is rejected because the API would force inline behavior.
+- Identical path/content plus metadata deduplicates. Conflicting duplicate metadata
+  rejects rather than silently losing a filename or content ID.
+- Local default limit is20MiB total raw attachment bytes (before base64); configure
+  mailchannels_attachment_bytes in server settings to change it. This is a module
+  resource limit, not a claim about the provider's full-message size limit. Up to
+  1000input attachments; malformed, oversized and ambiguous inputs reject.
+
+Native tests cover binary/empty data, MIME guessing, public/private/temporary paths,
+path precedence, duplicates/inline IDs, size limits, actual MailManager mock-HTTP
+JSON, and CID linkage in HTML. All files/mappings/settings/client are restored.
+This does not establish compatibility with installed Mime Mail/Email Attachment
+Helper rewriting, raw multipart parsing, every storage backend or live provider
+acceptance. Those require separate native module/deployment validation.
+
+File paths must come from trusted server-side composition code after application
+access checks. File-system readability is not end-user authorization.

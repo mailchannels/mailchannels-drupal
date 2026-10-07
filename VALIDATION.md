@@ -6,9 +6,9 @@ It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
 The public native runner creates a fresh Drupal 11.4.8/PHP 8.3.35/MariaDB 11.8.9
-site and runs 166 checks: 16 inert native hook, 31 mock backend transport,
+site and runs 196 checks: 16 inert native hook, 31 mock backend transport,
 27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
-import checks, plus 25 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
+import checks, plus 30 attachment-mapper checks, 25 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
 exit codes alone do not reliably indicate probe exceptions. No host ports or live
 provider requests are used. Cleanup removes the generated site/database/network.
 
@@ -38,7 +38,7 @@ Temporary keys, client/server containers and generated site/network are removed.
 This covers Linux/PHP8.3/CurlHandler/HTTP1.1, not other handlers, HTTP2, every timeout
 phase, production middleware or delivered email.
 
-Remaining: full message/MIME and attachment compatibility; contributed mailer
+Remaining: full message/MIME and contributed-module attachment compatibility; contributed mailer
 adapters; supported runtime matrix; browser/accessibility; time-based session expiry;
 concurrent imports and recovery; production middleware review; authorized provider
 validation and domain authorization; packaging/release review and directory acceptance.
