@@ -6,15 +6,20 @@ It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
 The public native runner creates a fresh Drupal 11.4.8/MariaDB 11.8.9
-site using the selected PHP image and runs 196 checks: 16 inert native hook, 31 mock backend transport,
+site using the selected PHP image and runs 199 checks: 16 inert native hook, 31 mock backend transport,
 27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
-import checks, plus 30 attachment-mapper checks, 25 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
+import checks, plus 30 attachment-mapper checks, 28 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
 exit codes alone do not reliably indicate probe exceptions. No host ports or live
 provider requests are used. Cleanup removes the generated site/database/network.
 
 HTTP checks log in through native forms with real cookies, reject unauthorized or
 invalid-CSRF submissions, preserve newer saves against stale forms, and reject
 preloaded forms after logout, permission revocation or server-side session deletion.
+After a real three-second idle wait, a native control checks stored timestamps and
+calls Drupal's session handler gc(1). The old cookie and preloaded form then reject;
+a fresh login confirms unchanged routing. This exercises explicit native garbage
+collection with a one-second fixture lifetime, not deployment-configured automatic
+expiry. No session timestamps are artificially backdated.
 Native controls independently verify routing and remove synthetic users/role/state.
 Settings bytes and mode are restored without copying credentials out of the fixture.
 
@@ -52,3 +57,12 @@ and fresh-site suites for each. Drupal documents PHP 8.3, 8.4 and 8.5 support fo
 The runner prints its actual PHP version; verify the current commit's results and
 cleanup sentinel in each job. This matrix does not claim Drupal 10/12 compatibility
 or cover alternative databases and production web-server deployments.
+
+Session-expiry deployment requirement: Drupal 11.4.8's inspected session handler
+reads stored session data without a timestamp predicate; idle expiry depends on
+session garbage collection. Configure and validate the company's session lifetime,
+cookie policy and reliable collection/invalidation before deployment. Setting a
+lifetime alone is not evidence of a strict per-request idle timeout. If a strict
+cutoff is required, validate a supported session policy separately. The candidate
+uses Drupal's authorization/session services and does not replace global policy.
+Reference: https://www.drupal.org/project/drupal/issues/3522112

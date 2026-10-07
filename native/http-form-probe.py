@@ -98,5 +98,13 @@ if os.environ.get('DRUPAL_SESSION_SYNC'):
     check(other.request(PATH,held)[0]==403,'server-side session deletion denies preloaded form POST')
     replacement=Session();replacement.login('http-authorized')
     check(replacement.form()['backend']=='php_mail','fresh login confirms unchanged routing after session deletion')
+    expired_form=replacement.form();expired_form['backend']='mailchannels_email_api'
+    # No synthetic timestamp rewrite: wait beyond the explicit GC lifetime.
+    time.sleep(3)
+    control('expire')
+    check(replacement.request(PATH)[0]==403,'native idle-session GC denies old-cookie GET')
+    check(replacement.request(PATH,expired_form)[0]==403,'native idle-session GC denies preloaded form POST')
+    renewed=Session();renewed.login('http-authorized')
+    check(renewed.form()['backend']=='php_mail','fresh login confirms routing unchanged after idle-session GC')
     control('verify')
 print(f'HTTP_FORM_PROBE_COMPLETE {checks} checks')

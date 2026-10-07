@@ -80,24 +80,24 @@ try:
     # Register child servers in outer cleanup as well, including timeout paths.
     workers.extend([prefix+'-http',prefix+'-http-client',prefix+'-http-control',prefix+'-http-settings'])
     text=command([sys.executable,str(root/'native/http-session.py'),str(site),network,prefix],timeout=180)
-    assert 'HTTP_SESSION_RUN_COMPLETE 25 checks; settings restored' in text,text
-    assert sum(line.startswith('PASS ') for line in text.splitlines())==25,text
-    print('HTTP session fixture: 25 checks passed',flush=True)
-    checks+=25
+    assert 'HTTP_SESSION_RUN_COMPLETE 28 checks; settings restored' in text,text
+    assert sum(line.startswith('PASS ') for line in text.splitlines())==28,text
+    print('HTTP session fixture: 28 checks passed',flush=True)
+    checks+=28
     workers.extend(prefix+'-concurrent-'+mode for mode in ['setup','first','second','cleanup'])
     text=command([sys.executable,str(root/'native/concurrent-form.py'),str(site),network,prefix],timeout=180)
     assert 'CONCURRENT_RUN_COMPLETE 15 checks' in text,text
     assert sum(line.startswith('PASS ') for line in text.splitlines())==15,text
     print('Concurrent form fixture: 15 checks passed',flush=True)
     checks+=15
-    assert checks==196
+    assert checks==199
     workers.extend([prefix+'-tls',prefix+'-tls-client'])
     text=command([sys.executable,str(root/'tls/run.py'),str(site),network,prefix],timeout=180)
     assert 'TLS_PROBE_COMPLETE' in text and 'TLS_FIXTURE_CLEANUP_COMPLETE' in text,text
     assert sum(line.startswith('PASS ') for line in text.splitlines())==6,text
     print('TLS fixture: 6 scenarios passed',flush=True)
-    print('DRUPAL_NATIVE_COMPLETE 196 checks + 6 TLS scenarios',flush=True)
-    logs.append('DRUPAL_NATIVE_COMPLETE 196 checks + 6 TLS scenarios')
+    print('DRUPAL_NATIVE_COMPLETE 199 checks + 6 TLS scenarios',flush=True)
+    logs.append('DRUPAL_NATIVE_COMPLETE 199 checks + 6 TLS scenarios')
 finally:
     cleanup_errors=[]
     for container in [*reversed(workers),database]:

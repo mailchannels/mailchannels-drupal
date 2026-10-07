@@ -34,7 +34,7 @@ try:
     with tempfile.TemporaryDirectory(prefix=name) as syncdir:
         os.chmod(syncdir,0o777)
         client=subprocess.Popen(['docker','run','--rm','--name',name+'-client','--network',network,'-v',str(fixture)+':/candidate:ro','-v',syncdir+':/sync','-e','DRUPAL_SESSION_SYNC=/sync','-e','DRUPAL_FIXTURE_ORIGIN=http://'+name+':18378','python:3.12-slim','python','/candidate/native/http-form-probe.py'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-        for mode in ['revoke','restore','delete','verify']:
+        for mode in ['revoke','restore','delete','expire','verify']:
             deadline=time.monotonic()+45
             while not (Path(syncdir)/(mode+'.ready')).exists():
                 if client.poll() is not None:
@@ -45,11 +45,11 @@ try:
             (Path(syncdir)/(mode+'.done')).touch()
         out,err=client.communicate(timeout=30)
         print(out+err,end='',flush=True)
-        assert client.returncode==0 and 'HTTP_FORM_PROBE_COMPLETE 25 checks' in out
-        assert sum(line.startswith('PASS ') for line in out.splitlines())==25
+        assert client.returncode==0 and 'HTTP_FORM_PROBE_COMPLETE 28 checks' in out
+        assert sum(line.startswith('PASS ') for line in out.splitlines())==28
 finally:
     for container in [name+'-client',name+'-control',name+'-settings',name]:subprocess.run(['docker','rm','-f',container],capture_output=True)
     if client is not None and client.poll() is None:client.communicate(timeout=10)
     fixture_settings('restore')
     if setup:drush('http-form-setup.php',{'DRUPAL_FIXTURE_CLEANUP':'1'},'HTTP_FIXTURE_CLEANED')
-print('HTTP_SESSION_RUN_COMPLETE 25 checks; settings restored')
+print('HTTP_SESSION_RUN_COMPLETE 28 checks; settings restored')
