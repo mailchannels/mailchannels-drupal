@@ -41,8 +41,26 @@ Observed contributed conventions:
    provider payload size, lifecycle and duplicates need explicit native tests.
 2. Email Attachment Helper: params.attachment (single) or params.attachments (list),
    with filecontent/filename/filemime. Optional disposition=inline and cid define
-   embedded content. It may itself rewrite body/headers into MIME, so accepting the
-   params alone does not prove compatibility when this module is installed.
+   embedded content. Version 8.x-1.7 rewrites body/headers to multipart/mixed
+   whenever either params key is nonempty, with no backend-selection guard.
+   This is incompatible with the current adapter's supported content types.
+   A source-level probe of the real helper hook confirms singular, plural and
+   inline rewrites are rejected at the content-type boundary. Attachment-free
+   messages are unchanged. This is not an installed-site compatibility test.
+
+Migration from Email Attachment Helper:
+- Inventory other mail backends before changing the helper: its hook affects all
+  core mail messages, and removing it could break attachments on other routes.
+- In an isolated site, arrange for MailChannels messages to reach this adapter
+  without helper MIME rewriting. Do not simply relabel a multipart body as plain
+  text or HTML; that would expose MIME serialization as message content.
+- Compose the supported attachment arrays directly. Convert helper filename-only
+  file inputs to an explicit filepath plus a display filename. Preserve empty
+  filecontent bytes explicitly: the helper treats empty content as a file fallback,
+  whereas this adapter supports empty attachments.
+- Revalidate every affected mail route, binary and inline content, and any other
+  helper consumers before deployment. No automatic helper disablement or hook
+  suppression is implemented by this candidate.
 3. Mailer Plus/Symfony component transports are separate adapter routes. Do not
    treat these arrays as their native Email/attachment contract.
 
@@ -53,3 +71,6 @@ https://www.drupal.org/project/email_attachment
 https://docs.mailchannels.com/api-reference/send/send-an-email
 MailChannels Attachment schema and installed Drupal11.4.8 mail plugins.
 
+
+Pinned helper source inspected: 8.x-1.7 / 8da7aa7ad4f2f4481fadce1cb943cc3b83ae859f
+https://git.drupalcode.org/project/email_attachment/-/tree/8.x-1.7
