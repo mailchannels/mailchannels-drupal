@@ -5,7 +5,7 @@ Public CI currently runs 94 isolated conversion checks against locked Drupal 11.
 It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
-The public native runner creates a fresh Drupal 11.4.8/MariaDB 11.8.9
+The public native runner creates a fresh Drupal 11.4.8 site with MariaDB 11.8.9 or PostgreSQL 17.11
 site using the selected PHP image and runs 199 checks: 16 inert native hook, 31 mock backend transport,
 27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
 import checks, plus 30 attachment-mapper checks, 28 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
@@ -56,7 +56,9 @@ and fresh-site suites for each. Drupal documents PHP 8.3, 8.4 and 8.5 support fo
 11.4: https://www.drupal.org/docs/getting-started/system-requirements/php-requirements
 The runner prints its actual PHP version; verify the current commit's results and
 cleanup sentinel in each job. This matrix does not claim Drupal 10/12 compatibility
-or cover alternative databases and production web-server deployments.
+or cover production web-server deployments. PostgreSQL 17.11 is now configured
+as an additional native-suite backend across the same three PHP versions; check
+current hosted results before treating any new matrix cell as validated.
 
 Session-expiry deployment requirement: Drupal 11.4.8's inspected session handler
 reads stored session data without a timestamp predicate; idle expiry depends on

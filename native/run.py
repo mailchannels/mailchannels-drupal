@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fresh disposable Drupal/MariaDB fixture. Never targets an existing site."""
+"""Fresh disposable Drupal/database fixture. Never targets an existing site."""
 import os
 from pathlib import Path
 import shutil
@@ -14,6 +14,8 @@ site=work/'site'
 site.mkdir(parents=True)
 network=prefix+'-net'
 database=prefix+'-db'
+backend=os.environ.get('DRUPAL_TEST_DATABASE','mariadb')
+if backend not in ('mariadb','postgres'):raise ValueError('Unsupported fixture database')
 logs=[]
 created_network=False
 checks=0
@@ -48,17 +50,31 @@ try:
     command(['docker','run','--rm','--network','none','-v',str(site)+':/app',
         '-v',str(root)+':/candidate:ro','python:3.12-slim','python','-c',copy_code])
     command(['docker','network','create','--internal',network]);created_network=True
-    command(['docker','run','-d','--name',database,'--network',network,
-        '-e','MARIADB_ROOT_PASSWORD=isolated-root-only','-e','MARIADB_DATABASE=drupal',
-        '-e','MARIADB_USER=drupal','-e','MARIADB_PASSWORD=isolated-db-only','mariadb:11.8.9'])
+    if backend=='postgres':
+        command(['docker','run','-d','--name',database,'--network',network,
+            '-e','POSTGRES_DB=drupal','-e','POSTGRES_USER=drupal',
+            '-e','POSTGRES_PASSWORD=isolated-db-only','postgres:17.11-bookworm'])
+        readiness=['pg_isready','-h','127.0.0.1','-U','drupal','-d','drupal']
+        driver='pgsql'
+    else:
+        command(['docker','run','-d','--name',database,'--network',network,
+            '-e','MARIADB_ROOT_PASSWORD=isolated-root-only','-e','MARIADB_DATABASE=drupal',
+            '-e','MARIADB_USER=drupal','-e','MARIADB_PASSWORD=isolated-db-only','mariadb:11.8.9'])
+        readiness=['healthcheck.sh','--connect','--innodb_initialized']
+        driver='mysql'
     deadline=time.monotonic()+60
-    while subprocess.run(['docker','exec',database,'healthcheck.sh','--connect','--innodb_initialized'],capture_output=True).returncode:
+    while subprocess.run(['docker','exec',database,*readiness],capture_output=True).returncode:
         if time.monotonic()>deadline:raise RuntimeError('Database readiness timeout')
         time.sleep(.5)
-    print('Installing disposable Drupal site on internal network',flush=True)
-    php('site:install','minimal','--db-url=mysql://drupal:isolated-db-only@'+database+'/drupal',
+    if backend=='postgres':
+        command(['docker','exec',database,'psql','-U','drupal','-d','drupal','-v','ON_ERROR_STOP=1','-c','CREATE EXTENSION pg_trgm;'])
+    print('Installing disposable Drupal site on internal network: '+backend,flush=True)
+    php('site:install','minimal','--db-url='+driver+'://drupal:isolated-db-only@'+database+'/drupal',
         '--account-name=fixture-admin','--account-pass=isolated-admin-only',
         '--account-mail=admin@example.com','--site-mail=sender@example.com','--site-name=Isolated fixture','-y')
+    actual=php('php:eval','echo json_encode(["driver"=>\\Drupal::database()->driver(),"server"=>\\Drupal::database()->query("SELECT VERSION()")->fetchField()]);')
+    assert '"driver":"'+driver+'"' in actual,actual
+    print('DATABASE_RUNTIME '+actual.strip(),flush=True)
     private_setup="from pathlib import Path; p=Path('/app/web/sites/default/settings.php'); m=p.stat().st_mode & 0o777; p.chmod(0o600); p.write_bytes(p.read_bytes()+b'\\n$settings[\"file_private_path\"]=\"/app/private\";\\n'); p.chmod(m); Path('/app/private').mkdir()"
     command(['docker','run','--rm','--network','none','-v',str(site)+':/app',
         'python:3.12-slim','python','-c',private_setup])

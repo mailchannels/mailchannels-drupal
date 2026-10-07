@@ -16,7 +16,7 @@ Drupal core is 11.4.8. These checks do not install a site or send email.
 Install `cryptography==45.0.3` in a Python virtual environment for temporary test
 certificate generation, then run `python native/run.py` after building the image.
 It installs locked dependencies into a new disposable directory, creates an internal
-Docker network and MariaDB 11.8.9, installs Drupal, and executes 199 native/HTTP/concurrent checks plus six local TLS scenarios.
+Docker network and the selected database (MariaDB 11.8.9 by default), installs Drupal, and executes 199 native/HTTP/concurrent checks plus six local TLS scenarios.
 It publishes no host ports and disables PHP mail(). Dependencies download before
 the site enters the isolated network; all credentials are synthetic fixture values.
 The runner removes its named containers/network/site and retains results under
@@ -43,3 +43,16 @@ container (including HTTP server, concurrency workers and TLS client) inherits t
 selected image. The default without DRUPAL_TEST_IMAGE remains the original php83
 image. Check the current commit's CI results before treating any matrix cell as
 validated; a configured job alone is not evidence of passing tests.
+
+PostgreSQL fixture (rebuild the PHP image for PDO PostgreSQL support):
+
+```sh
+DRUPAL_TEST_DATABASE=postgres python native/run.py
+```
+
+The alternative database image is PostgreSQL 17.11 on Bookworm. The runner creates
+`pg_trgm` in the isolated Drupal database before installation, verifies the actual
+Drupal driver, and records the server version. The default remains MariaDB 11.8.9.
+CI runs the native suite for both databases with all three configured PHP versions.
+A configured matrix is not a passing result; check the completion/cleanup markers.
+Reference: https://www.drupal.org/docs/getting-started/system-requirements/database-server-requirements
