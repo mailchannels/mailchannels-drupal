@@ -128,6 +128,11 @@ final class CoreMessage
             }
             $customHeaders['Sender'] = $headers['sender'];
         }
+        // The API rejects merged custom headers whose name+value bytes exceed 5 KB.
+        // shortcut: assumes KB = 1024 bytes, tighten to 5000 if the API rejects smaller payloads.
+        if (array_sum(array_map(static fn ($name, $value) => strlen((string) $name) + strlen($value), array_keys($customHeaders), $customHeaders)) > 5120) {
+            throw new \InvalidArgumentException('Custom mail headers exceed the 5 KB limit.');
+        }
         $envelope = NULL;
         foreach ([$headers['return-path'] ?? NULL, $message['Return-Path'] ?? NULL] as $value) {
             if ($value === NULL) {

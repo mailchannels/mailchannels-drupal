@@ -18,4 +18,9 @@ foreach(['Authentication-Results'=>'fixture-sensitive','DKIM-Signature'=>'fixtur
  try{CoreMessage::payload($bad);throw new RuntimeException('Expected header rejection');}
  catch(InvalidArgumentException $error){check_header(!str_contains($error->getMessage(),'fixture-sensitive'),'invalid/conflicting header rejected with fixed diagnostic');}
 }
+$fit=$base;$fit['headers']=['X-Mailer'=>str_repeat('a',5120-strlen('X-Mailer'))];
+check_header(strlen(CoreMessage::payload($fit)['headers']['X-Mailer'])===5112,'custom headers at the 5 KB API limit accepted');
+$big=$fit;$big['headers']['Sender']='a@example.com';
+try{CoreMessage::payload($big);throw new RuntimeException('Expected header size rejection');}
+catch(InvalidArgumentException $error){check_header($error->getMessage()==='Custom mail headers exceed the 5 KB limit.','merged custom headers over 5 KB rejected before sending');}
 echo "DRUPAL_HEADERS_COMPLETE $count checks\n";
