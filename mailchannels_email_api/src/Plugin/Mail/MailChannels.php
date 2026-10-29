@@ -12,6 +12,7 @@ use Drupal\mailchannels_email_api\CoreMessage;
 use Drupal\mailchannels_email_api\AttachmentMapper;
 use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -72,7 +73,9 @@ final class MailChannels implements MailInterface, ContainerFactoryPluginInterfa
 
   private function fail(string $reason): bool {
     // Never log provider bodies, exceptions, keys, recipients or message/reset data.
-    $this->logger->warning('MailChannels mail was not confirmed: @reason. Do not automatically resend uncertain messages.', ['@reason' => $reason]);
+    // Outages and timeouts must reach error alerting; rejected and configuration cases stay warnings.
+    $level = $reason === 'acceptance_unconfirmed' ? LogLevel::ERROR : LogLevel::WARNING;
+    $this->logger->log($level, 'MailChannels mail was not confirmed: @reason. Do not automatically resend uncertain messages.', ['@reason' => $reason]);
     return FALSE;
   }
 }

@@ -9,11 +9,13 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Exception\ConnectException;
 function verify_transport($condition, $label) { if (!$condition) throw new RuntimeException($label); print "PASS $label\n"; }
 $originalSettings = Settings::getAll();
+$warning = \Drupal\Core\Logger\RfcLogLevel::WARNING;
+$error = \Drupal\Core\Logger\RfcLogLevel::ERROR;
 $originalMap = \Drupal::config('system.mail')->get('interface');
 $originalClient = \Drupal::httpClient();
 $logs = new class extends \Psr\Log\AbstractLogger {
   public array $entries = [];
-  public function log($level, string|\Stringable $message, array $context = []): void { $this->entries[] = [(string)$message, $context]; }
+  public function log($level, string|\Stringable $message, array $context = []): void { $this->entries[] = [(string)$message, $context, $level]; }
 };
 \Drupal::logger('mailchannels_email_api')->addLogger($logs);
 new Settings($originalSettings + ['mailchannels_api_key' => 'private-secret-fixture', 'mailchannels_allowed_senders' => ['sender@example.com']]);
@@ -28,21 +30,21 @@ try {
   $message = $plugin->format(['from'=>'sender@example.com', 'to'=>'recipient@example.com', 'subject'=>'private-message', 'body'=>['private-reset-token'], 'headers'=>[]]);
   $sent = json_encode(['request_id'=>'fixture', 'results'=>[['index'=>0,'status'=>'sent','message_id'=>'fixture']]]);
   $cases = [
-    'accepted' => [new Response(202, [], $sent), TRUE],
-    'failed-result' => [new Response(202, [], '{"results":[{"index":0,"status":"failed"}]}'), FALSE],
-    'dry-run' => [new Response(200, [], '{"rendered":"private-reset-token"}'), FALSE],
-    'redirect' => [new Response(302, ['Location'=>'https://example.com']), FALSE],
-    'rate-limit' => [new Response(429, [], 'private-secret-fixture'), FALSE],
-    'server-error' => [new Response(503, [], 'private-reset-token'), FALSE],
-    'malformed' => [new Response(202, [], 'not json'), FALSE],
-    'empty' => [new Response(202), FALSE],
-    'wrong-index' => [new Response(202, [], '{"results":[{"index":1,"status":"sent"}]}'), FALSE],
-    'oversize' => [new Response(202, [], str_repeat('x', 65537)), FALSE],
-    'timeout' => [new ConnectException('private-secret-fixture', new Request('POST','https://api.mailchannels.net/tx/v1/send')), FALSE],
+    'accepted' => [new Response(202, [], $sent), TRUE, NULL],
+    'failed-result' => [new Response(202, [], '{"results":[{"index":0,"status":"failed"}]}'), FALSE, $warning],
+    'dry-run' => [new Response(200, [], '{"rendered":"private-reset-token"}'), FALSE, $error],
+    'redirect' => [new Response(302, ['Location'=>'https://example.com']), FALSE, $error],
+    'rate-limit' => [new Response(429, [], 'private-secret-fixture'), FALSE, $warning],
+    'server-error' => [new Response(503, [], 'private-reset-token'), FALSE, $error],
+    'malformed' => [new Response(202, [], 'not json'), FALSE, $error],
+    'empty' => [new Response(202), FALSE, $error],
+    'wrong-index' => [new Response(202, [], '{"results":[{"index":1,"status":"sent"}]}'), FALSE, $error],
+    'oversize' => [new Response(202, [], str_repeat('x', 65537)), FALSE, $error],
+    'timeout' => [new ConnectException('private-secret-fixture', new Request('POST','https://api.mailchannels.net/tx/v1/send')), FALSE, $error],
   ];
-  foreach ($cases as $name => [$response, $expected]) {
-    $mock->append($response); $before = count($history);
-    verify_transport($plugin->mail($message) === $expected && count($history) === $before+1, "$name one attempt correct result");
+  foreach ($cases as $name => [$response, $expected, $level]) {
+    $mock->append($response); $before = count($history); $logged = count($logs->entries);
+    verify_transport($plugin->mail($message) === $expected && count($history) === $before+1 && array_column(array_slice($logs->entries, $logged), 2) === ($level === NULL ? [] : [$level]), "$name one attempt correct result and log level");
   }
   $withHeaders=$message;$withHeaders['headers']=['X-Mailer'=>'Drupal','X-Campaign-Id'=>'fixture-campaign','List-Unsubscribe'=>'<https://example.com/unsubscribe/fixture>'];
   $mock->append(new Response(202, [], $sent));
@@ -70,8 +72,8 @@ try {
   $request = $history[0]['request']; $options = $history[0]['options'];
   verify_transport((string)$request->getUri() === 'https://api.mailchannels.net/tx/v1/send' && $request->getHeaderLine('X-Api-Key') === 'private-secret-fixture', 'fixed endpoint and server key');
   verify_transport($options['allow_redirects'] === FALSE && $options['verify'] === TRUE && $options['timeout'] === 15 && $options['connect_timeout'] === 5, 'redirect TLS deadline controls');
-  $bad = $message; $bad['from'] = 'unauthorized@example.com'; $before=count($history);
-  verify_transport($plugin->mail($bad) === FALSE && count($history)===$before, 'sender allowlist rejects before HTTP');
+  $bad = $message; $bad['from'] = 'unauthorized@example.com'; $before=count($history); $logged=count($logs->entries);
+  verify_transport($plugin->mail($bad) === FALSE && count($history)===$before && array_column(array_slice($logs->entries, $logged), 2)===[$warning], 'sender allowlist rejects before HTTP at warning level');
   new Settings($originalSettings + ['mailchannels_allowed_senders'=>['sender@example.com']]);
   $noKey = $manager->createInstance('mailchannels_email_api');
   verify_transport($noKey->mail($message) === FALSE && count($history)===$before, 'missing key rejects before HTTP');
