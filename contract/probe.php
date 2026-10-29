@@ -35,6 +35,8 @@ $payload = CoreMessage::payload($message);
 check(count($payload['personalizations'][0]['to']) === 2 && $payload['personalizations'][0]['to'][0]['name'] === 'Doe, Jane', 'quoted comma recipients');
 check($payload['personalizations'][0]['bcc'][0]['email'] === 'hidden@example.com' && !str_contains(json_encode($payload['personalizations'][0]['to']), 'hidden'), 'Bcc remains separate');
 check($payload['reply_to']['email'] === 'visitor@example.com', 'visitor Reply-To preserved');
+$named = $message; $named['headers']['To'] = 'Jane <jane@example.com>, Second <second@example.com>';
+check(array_column(CoreMessage::payload($named)['personalizations'][0]['to'], 'name') === ['Jane', 'Second'], 'visible To display names preserved for same recipients');
 $second = $message; $second['body'] = 'Different token';
 check(CoreMessage::payload($message) !== CoreMessage::payload($second), 'same Drupal type ID does not collapse distinct mail');
 foreach ([['to'=>''], ['subject'=>"bad\r\nBcc: private-token@example.com"], ['attachments'=>['file']], ['params'=>['attachments'=>['file']]]] as $change) { rejects(array_replace($message, $change), 'unsupported message rejected'); }

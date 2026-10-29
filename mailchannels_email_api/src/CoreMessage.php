@@ -150,8 +150,13 @@ final class CoreMessage
         if (!$to) {
             throw new \InvalidArgumentException('To is required; Bcc-only mail is unsupported.');
         }
-        if (isset($headers['to']) && self::addresses($headers['to']) !== $to) {
-            throw new \InvalidArgumentException('Separate visible and envelope recipients need explicit mapping.');
+        if (isset($headers['to'])) {
+            // A visible To header may add display names to the same recipients.
+            $visible = self::addresses($headers['to']);
+            if (array_column($visible, 'email') !== array_column($to, 'email')) {
+                throw new \InvalidArgumentException('Separate visible and envelope recipients need explicit mapping.');
+            }
+            $to = $visible;
         }
         $personalization = ['to' => $to];
         foreach (['cc', 'bcc'] as $name) {
