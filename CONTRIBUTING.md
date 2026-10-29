@@ -11,7 +11,7 @@ python .ci/check.py
 
 Dependency installation needs network access; all conversion probes and PHP syntax
 checks run with Docker networking disabled and PHP mail() disabled. The locked
-Drupal core is 11.4.8. These checks do not install a site or send email.
+Drupal core is 11.4.11. These checks do not install a site or send email.
 
 Install `cryptography==45.0.3` in a Python virtual environment for temporary test
 certificate generation, then run `python native/run.py` after building the image.
@@ -26,7 +26,7 @@ Browser acceptance and broader runtime/transport coverage remain open. Keep
 unsupported inputs explicit rather than silently losing message data.
 
 Composer validation keeps schema/lock checks strict while disabling the general
-version-range recommendation: the test fixture intentionally pins Drupal 11.4.8.
+version-range recommendation: the test fixture intentionally pins Drupal 11.4.11.
 
 To exercise another configured PHP runtime, build and select its image explicitly:
 

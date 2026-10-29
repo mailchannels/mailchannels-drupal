@@ -1,11 +1,11 @@
 # Validation scope
 
-Public CI currently runs 143 isolated conversion checks against locked Drupal 11.4.8:
+Public CI currently runs 143 isolated conversion checks against locked Drupal 11.4.11:
 19 core conversion, 17 flowed-text, 20 custom-header and 16 envelope-sender and 17 HTML checks, plus five attachment-boundary checks.
 It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
-The public native runner creates a fresh Drupal 11.4.8 site with MariaDB 11.8.9 or PostgreSQL 17.11
+The public native runner creates a fresh Drupal 11.4.11 site with MariaDB 11.8.9 or PostgreSQL 17.11
 site using the selected PHP image and runs 210 checks: 16 inert native hook, 42 mock backend transport,
 27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
 import checks, plus 30 attachment-mapper checks, 28 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
