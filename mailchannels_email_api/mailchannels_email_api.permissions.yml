@@ -1,0 +1,4 @@
+administer mailchannels email api:
+  title: 'Administer MailChannels Email API mail routing'
+  description: 'Change the default mail backend for the site.'
+  restrict access: true
