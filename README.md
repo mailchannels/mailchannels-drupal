@@ -1,8 +1,7 @@
 # MailChannels Email API for Drupal — candidate
 
 Unreleased implementation for Drupal 11.4 with a PHP 8.3–8.5 validation matrix. **Not production-ready or
-listed on Drupal.org.** Package and project names are provisional. Support:
-[dev@mailchannels.com](mailto:dev@mailchannels.com). GPL-2.0-or-later.
+listed on Drupal.org.** Package and project names are provisional. GPL-2.0-or-later.
 
 The core MailInterface backend sends plain-text or explicitly requested HTML mail through the
 [MailChannels Email API](https://docs.mailchannels.com/api-reference/send/send-an-email).
@@ -10,6 +9,12 @@ It preserves supported custom headers, Cc/Bcc, one Reply-To, and explicit bounce
 addresses. From, Sender and envelope identities require an exact local allowlist.
 The API key stays in server settings; the protected configuration page does not
 store it in exported configuration. Installation does not change mail routing.
+
+## Support
+
+This project is supported by the MailChannels team on a best-effort basis. The best way to get support is to file an issue on GitHub: https://github.com/mailchannels/mailchannels-drupal/issues
+
+If you are a MailChannels customer and have a problem with the operation of the MailChannels service, you can get support at https://support.mailchannels.com/
 
 ## Review and validation
 

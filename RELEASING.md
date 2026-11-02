@@ -1,11 +1,10 @@
 # Maintainer and publication handoff
 
 No versioned release, package registration or Drupal.org submission is authorized
-by this candidate's existence. Support contact: dev@mailchannels.com.
+by this candidate's existence. For project support, file an issue on GitHub: https://github.com/mailchannels/mailchannels-drupal/issues. MailChannels customers with service-operation problems can get support at https://support.mailchannels.com/.
 
 1. Assign an individual code maintainer. Create their individual Drupal.org account
-   and set up access under Drupal.org's current project contributor rules. A shared
-   support email is not an individual maintainer identity.
+   and set up access under Drupal.org's current project contributor rules. A shared email is not an individual maintainer identity.
 2. Verify project/machine-name availability and ownership on Drupal.org before
    registering names. Review licensing, project-description and security-coverage
    requirements; do not claim advisory coverage without approval.
