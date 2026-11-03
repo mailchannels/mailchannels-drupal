@@ -326,7 +326,9 @@ final class CoreMessage
             throw new \InvalidArgumentException('Attachment content exceeds local size limit.');
         }
         $attachment = ['content' => base64_encode($content), 'filename' => $filename, 'type' => $type];
-        if (isset($headers['content-id'])) {
+        // A Content-ID on a disposition=attachment part (Mime Mail adds one to every file)
+        // would make the API render the file inline, so only non-attachment parts keep it.
+        if (isset($headers['content-id']) && $disposition !== 'attachment') {
             $cid = preg_replace('/^\s*<(.*)>\s*$/', '$1', $headers['content-id']);
             if (!preg_match('/^[\x21-\x3b\x3d\x3f-\x7e]{1,255}$/D', $cid)) {
                 throw new \InvalidArgumentException('Invalid inline attachment ID.');

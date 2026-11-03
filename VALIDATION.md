@@ -6,7 +6,7 @@ It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
 The public native runner creates a fresh Drupal 11.4.11 site with MariaDB 11.8.9 or PostgreSQL 17.11
-site using the selected PHP image and runs 210 checks: 16 inert native hook, 42 mock backend transport,
+site using the selected PHP image and runs 222 checks: 16 inert native hook, 42 mock backend transport,
 27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
 import checks, plus 30 attachment-mapper checks, 28 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
 exit codes alone do not reliably indicate probe exceptions. No host ports or live
@@ -95,3 +95,14 @@ plain parts and `format()` pass-through, plus a 20 MB attachment boundary and 15
 message data. Not yet established: native-site and contributed-module (Mime Mail,
 Symfony Mailer) end-to-end composition, and attachment byte limits through the
 native suite.
+
+## Installed contributed mailers (2026-11-03)
+
+`native/contrib-mimemail-probe.php` and `native/contrib-helper-probe.php` (6 checks
+each) run last in the native suite on the installed site, with Mail System 4.5.0,
+Mime Mail 2.0.3 and Email Attachment Helper 1.7.0 from the locked native project and
+a mock HTTP client. Mime Mail as formatter with the MailChannels sender: HTML with
+plain alternative, a file attachment sent once with exact bytes, a `public://` image
+embedded as an inline attachment whose cid matches the HTML, and a plain-only body.
+Email Attachment Helper with the MailChannels formatter: list and inline attachments
+sent once with exact bytes and Content-ID, and attachment-free mail unchanged.

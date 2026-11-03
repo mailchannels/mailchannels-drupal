@@ -21,11 +21,11 @@ mp_check(!isset($p['attachments']) && !isset($p['headers']),'no attachments or M
 
 $pdf="%PDF-1.4\x00\xff binary";
 $mixed="--mix\r\nContent-Type: multipart/alternative; boundary=alt\r\n\r\n".str_replace("\n","\r\n",$alt)."\r\n"
- ."--mix\r\nContent-Type: application/pdf; name=\"ignored.pdf\"\r\nContent-Disposition: attachment; filename=\"Q3 report.pdf\"\r\nContent-Transfer-Encoding: base64\r\n\r\n".chunk_split(base64_encode($pdf),76,"\r\n")
+ ."--mix\r\nContent-Type: application/pdf; name=\"ignored.pdf\"\r\nContent-ID: <file@x>\r\nContent-Disposition: attachment; filename=\"Q3 report.pdf\"\r\nContent-Transfer-Encoding: base64\r\n\r\n".chunk_split(base64_encode($pdf),76,"\r\n")
  ."--mix\r\nContent-Type: text/plain\r\nContent-Disposition: attachment; filename*=UTF-8''caf%C3%A9.txt\r\n\r\nnotes\r\n--mix--\r\n";
 $p=CoreMessage::payload(mp_msg('multipart/mixed; boundary=mix',$mixed));
 mp_check(count($p['content'])===2 && $p['content'][1]['value']===$html,'nested alternative inside mixed with CRLF');
-mp_check($p['attachments'][0]===['content'=>base64_encode($pdf),'filename'=>'Q3 report.pdf','type'=>'application/pdf'],'binary attachment bytes, disposition filename and type preserved');
+mp_check($p['attachments'][0]===['content'=>base64_encode($pdf),'filename'=>'Q3 report.pdf','type'=>'application/pdf'],'binary attachment bytes, disposition filename and type preserved; attachment Content-ID dropped');
 $cont="--c\nContent-Type: text/plain \n\nhi\n--c\nContent-Type: application/pdf;\n   name*0=\"long report \";\n   name*1=\"part.pdf\"\nContent-Disposition: attachment;\n   filename*0*=UTF-8''r%C3%A9;\n   filename*1=\"sum\u{e9}.pdf\"\n\nx\n--c--";
 mp_check(CoreMessage::payload(mp_msg('multipart/mixed; boundary=c',$cont))['attachments'][0]['filename']==='résumé.pdf','RFC 2231 continuation filename sections assembled');
 mp_reject(mp_msg('multipart/mixed; boundary=c',str_replace('filename*1=','filename*2=',$cont)),'gapped continuation sections rejected without message data');

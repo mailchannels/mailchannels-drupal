@@ -44,8 +44,9 @@ Observed contributed conventions:
    repeats the alternative and embedded images in a trailing multipart/related
    part; that copy is accepted only when it adds nothing new. Real 2.0.3
    MimeMailFormatHelper output (HTML, explicit plaintext, plain-only, file
-   attachments, embedded local images) passes 8 source-level checks with
-   stand-in site services; this is not an installed-site test.
+   attachments, embedded local images) passes 8 source-level checks, and the
+   installed native suite sends Mime Mail HTML, file and embedded-image mail
+   through the MailChannels sender (native/contrib-mimemail-probe.php).
 2. Email Attachment Helper: params.attachment (single) or params.attachments (list),
    with filecontent/filename/filemime. Optional disposition=inline and cid define
    embedded content. Version 8.x-1.7 rewrites body/headers to multipart/mixed
@@ -54,7 +55,8 @@ Observed contributed conventions:
    inline Content-IDs) and, because the helper leaves the params in place, sends
    each attachment once when both copies are identical. The real 8.x-1.7
    mailAlter() output passes for plain and HTML bodies with singular, plural and
-   inline attachments (source-level check, not an installed-site test).
+   inline attachments, also on an installed site
+   (native/contrib-helper-probe.php).
 
 Email Attachment Helper is no longer required to be removed: its multipart
 rewrite is accepted. Composing the attachment arrays directly without the helper

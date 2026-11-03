@@ -112,8 +112,19 @@ try:
     assert 'TLS_PROBE_COMPLETE' in text and 'TLS_FIXTURE_CLEANUP_COMPLETE' in text,text
     assert sum(line.startswith('PASS ') for line in text.splitlines())==6,text
     print('TLS fixture: 6 scenarios passed',flush=True)
-    print('DRUPAL_NATIVE_COMPLETE 210 checks + 6 TLS scenarios',flush=True)
-    logs.append('DRUPAL_NATIVE_COMPLETE 210 checks + 6 TLS scenarios')
+    # Contributed mailers last: Email Attachment Helper rewrites every message with attachments.
+    php('en','mailsystem','mimemail','-y')
+    for script,count,sentinel,module in [('contrib-mimemail-probe.php',6,'CONTRIB_MIMEMAIL_COMPLETE 6 checks','email_attachment'),
+        ('contrib-helper-probe.php',6,'CONTRIB_HELPER_COMPLETE 6 checks',None)]:
+        text=php('php:script','/candidate/native/'+script)
+        assert sentinel in text,(script,'missing completion',text)
+        assert sum(line.startswith('PASS ') for line in text.splitlines())==count,(script,text)
+        checks+=count
+        print(f'{script}: {count} checks passed',flush=True)
+        if module:php('en',module,'-y')
+    assert checks==222
+    print('DRUPAL_NATIVE_COMPLETE 222 checks + 6 TLS scenarios',flush=True)
+    logs.append('DRUPAL_NATIVE_COMPLETE 222 checks + 6 TLS scenarios')
 finally:
     cleanup_errors=[]
     for container in [*reversed(workers),database]:
