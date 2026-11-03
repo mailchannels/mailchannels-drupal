@@ -92,8 +92,8 @@ drupal/core 11.4.11, PHP 8.3) covers multipart/alternative, mixed and related wi
 LF and CRLF line endings, base64 and quoted-printable parts, binary attachment
 bytes, RFC 2231 UTF-8 and continuation filenames, inline Content-IDs, generated plain text, flowed
 plain parts and `format()` pass-through, plus a 20 MB attachment boundary and 15 rejections that do not echo
-message data. Not yet established: native-site and contributed-module (Mime Mail,
-Symfony Mailer) end-to-end composition, and attachment byte limits through the
+message data. Installed-site Mime Mail and Email Attachment Helper checks are below.
+Not yet established: Symfony Mailer adapters and attachment byte limits through the
 native suite.
 
 ## Installed contributed mailers (2026-11-03)
