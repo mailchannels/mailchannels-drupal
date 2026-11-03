@@ -62,8 +62,10 @@ Email Attachment Helper is no longer required to be removed: its multipart
 rewrite is accepted. Composing the attachment arrays directly without the helper
 remains supported.
 
-3. Mailer Plus/Symfony component transports are separate adapter routes. Do not
-   treat these arrays as their native Email/attachment contract.
+3. Mailer Plus (symfony_mailer 2.x) sends Symfony Email objects through transports.
+   This module registers a `mailchannels+api://default` transport factory (tag
+   mailer.transport_factory) that maps Email attachments and inline parts directly;
+   the Drupal attachment arrays above do not apply on that route.
 
 Sources:
 https://api.drupal.org/api/drupal/core!lib!Drupal!Core!Mail!MailInterface.php/interface/MailInterface/11.x

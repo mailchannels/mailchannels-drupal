@@ -86,6 +86,17 @@ malformed escapes, raw non-ASCII bytes, bare CR and literal trailing whitespace
 repairing ambiguous mail. ASCII charset declarations are checked after decoding.
 Arbitrary charset conversion remains unsupported.
 
+## Symfony Mailer transport
+
+Sites that send with Symfony Mailer through Mailer Plus / Mailer Transport
+(`drupal/symfony_mailer` 2.x) can add a DSN transport with
+`mailchannels+api://default`. The API key and sender allowlist still come from
+`settings.php`; DSNs containing credentials, a port or another host are refused so
+the key never lands in exported configuration. Each send makes one API request with
+no retry and raises a transport error if acceptance is not confirmed. Core's own
+`symfony_mailer` mail plugin only loads Symfony's built-in transports and cannot use
+this one; use the `mailchannels_email_api` mail backend there.
+
 ## Serialized multipart MIME bodies
 
 Modules that compose their own MIME (for example HTML mail with attachments) may

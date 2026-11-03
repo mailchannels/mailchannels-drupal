@@ -115,16 +115,17 @@ try:
     # Contributed mailers last: Email Attachment Helper rewrites every message with attachments.
     php('en','mailsystem','mimemail','-y')
     for script,count,sentinel,module in [('contrib-mimemail-probe.php',6,'CONTRIB_MIMEMAIL_COMPLETE 6 checks','email_attachment'),
-        ('contrib-helper-probe.php',6,'CONTRIB_HELPER_COMPLETE 6 checks',None)]:
+        ('contrib-helper-probe.php',6,'CONTRIB_HELPER_COMPLETE 6 checks','mailer_transport'),
+        ('contrib-mailer-transport-probe.php',4,'CONTRIB_MAILER_TRANSPORT_COMPLETE 4 checks',None)]:
         text=php('php:script','/candidate/native/'+script)
         assert sentinel in text,(script,'missing completion',text)
         assert sum(line.startswith('PASS ') for line in text.splitlines())==count,(script,text)
         checks+=count
         print(f'{script}: {count} checks passed',flush=True)
         if module:php('en',module,'-y')
-    assert checks==222
-    print('DRUPAL_NATIVE_COMPLETE 222 checks + 6 TLS scenarios',flush=True)
-    logs.append('DRUPAL_NATIVE_COMPLETE 222 checks + 6 TLS scenarios')
+    assert checks==226
+    print('DRUPAL_NATIVE_COMPLETE 226 checks + 6 TLS scenarios',flush=True)
+    logs.append('DRUPAL_NATIVE_COMPLETE 226 checks + 6 TLS scenarios')
 finally:
     cleanup_errors=[]
     for container in [*reversed(workers),database]:

@@ -6,7 +6,7 @@ It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
 The public native runner creates a fresh Drupal 11.4.11 site with MariaDB 11.8.9 or PostgreSQL 17.11
-site using the selected PHP image and runs 222 checks: 16 inert native hook, 42 mock backend transport,
+site using the selected PHP image and runs 226 checks: 16 inert native hook, 42 mock backend transport,
 27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
 import checks, plus 30 attachment-mapper checks, 28 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
 exit codes alone do not reliably indicate probe exceptions. No host ports or live
@@ -93,8 +93,7 @@ LF and CRLF line endings, base64 and quoted-printable parts, binary attachment
 bytes, RFC 2231 UTF-8 and continuation filenames, inline Content-IDs, generated plain text, flowed
 plain parts and `format()` pass-through, plus a 20 MB attachment boundary and 15 rejections that do not echo
 message data. Installed-site Mime Mail and Email Attachment Helper checks are below.
-Not yet established: Symfony Mailer adapters and attachment byte limits through the
-native suite.
+Not yet established: attachment byte limits through the native suite.
 
 ## Installed contributed mailers (2026-11-03)
 
@@ -106,3 +105,16 @@ plain alternative, a file attachment sent once with exact bytes, a `public://` i
 embedded as an inline attachment whose cid matches the HTML, and a plain-only body.
 Email Attachment Helper with the MailChannels formatter: list and inline attachments
 sent once with exact bytes and Content-ID, and attachment-free mail unchanged.
+
+## Symfony Mailer transport (2026-11-03)
+
+`contract/mailer-transport-probe.php` (27 checks) covers the `mailchannels+api://default`
+transport: text/HTML/generated plain content, recipients, Reply-To, custom headers,
+file and inline attachments, envelope sender, rejections (envelope recipient changes,
+Bcc-only, multiple From/Reply-To, legacy charsets, reserved headers, over 20 MB), DSN
+credential/host refusal, one HTTP attempt per send with no retry, allowlist refusal
+before HTTP and secret-free logs. `native/contrib-mailer-transport-probe.php` (4
+checks) sends through the installed Mailer Transport 2.0.2 module (Symfony Mailer /
+Mailer Plus project) with a DSN transport entity and a mock HTTP client. Core's own
+`symfony_mailer` mail plugin only loads Symfony's built-in transport factories, so it
+cannot use this transport.

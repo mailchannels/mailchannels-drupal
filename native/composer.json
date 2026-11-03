@@ -103,6 +103,7 @@
     "require-dev": {
         "drupal/email_attachment": "1.7.0",
         "drupal/mimemail": "2.0.3",
+        "drupal/symfony_mailer": "2.0.2",
         "drush/drush": "^13"
     }
 }
