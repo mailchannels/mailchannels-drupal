@@ -4,3 +4,8 @@ services:
     arguments: ['@config.factory', '@string_translation']
     tags:
       - { name: module_install.uninstall_validator }
+  mailchannels_email_api.transport_factory:
+    class: Drupal\mailchannels_email_api\Mailer\MailChannelsTransportFactory
+    arguments: ['@http_client', '@logger.factory']
+    tags:
+      - { name: mailer.transport_factory }
