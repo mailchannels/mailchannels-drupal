@@ -104,7 +104,13 @@ final class CoreMessage
             $state = ['parts' => 0, 'bytes' => 0];
             $multipart = self::mimeEntity(['content-type' => $headers['content-type']], $message['body'], 0, FALSE, $state);
             if ($multipart['attachments'] && $attachments) {
-                throw new \InvalidArgumentException('Ambiguous attachment sources.');
+                // Helpers such as Email Attachment Helper serialize params attachments
+                // into the body and leave the params in place. Accept only an identical copy.
+                $key = static fn (array $list) => array_map(static fn ($a) => [$a['content'], $a['filename'], $a['content_id'] ?? NULL], $list);
+                if ($key($multipart['attachments']) !== $key($attachments)) {
+                    throw new \InvalidArgumentException('Ambiguous attachment sources.');
+                }
+                $attachments = [];
             }
             $attachments = $attachments ?: $multipart['attachments'];
             $contentType = 'text/plain';
@@ -388,25 +394,50 @@ final class CoreMessage
         $token = strtolower($match[1]);
         $rest = substr($value, strlen($match[0]));
         $params = [];
+        $sections = [];
         while (!preg_match('/^;?\s*$/D', $rest)) {
-            if (!preg_match('/^;\s*([A-Za-z0-9!#$&+.^_`|~-]+)(\*)?\s*=\s*(?:"((?:[^"\\\\]|\\\\.)*)"|([^\s;"]+))\s*/', $rest, $match)) {
+            if (!preg_match('/^;\s*([A-Za-z0-9!#$&+.^_`|~-]+)(?:\*([0-9]{1,2}))?(\*)?\s*=\s*(?:"((?:[^"\\\\]|\\\\.)*)"|([^\s;"]+))\s*/', $rest, $match)) {
                 throw new \InvalidArgumentException('Invalid MIME parameter.');
             }
             $rest = substr($rest, strlen($match[0]));
             $name = strtolower($match[1]);
-            $parameter = isset($match[4]) ? $match[4] : preg_replace('/\\\\(.)/s', '$1', $match[3]);
-            if ($match[2] === '*') {
-                if (!preg_match("/^utf-8'[^']*'(.*)$/iD", $parameter, $extended)) {
-                    throw new \InvalidArgumentException('Unsupported MIME parameter charset.');
+            $parameter = isset($match[5]) ? $match[5] : preg_replace('/\\\\(.)/s', '$1', $match[4]);
+            if ($match[2] !== '') {
+                // RFC 2231 continuation: name*0, name*1*, ... assembled below.
+                if (isset($sections[$name][(int) $match[2]])) {
+                    throw new \InvalidArgumentException('Duplicate MIME parameter.');
                 }
-                $parameter = rawurldecode($extended[1]);
+                $sections[$name][(int) $match[2]] = [$match[3] === '*', $parameter];
+                continue;
+            }
+            if ($match[3] === '*') {
+                $parameter = self::extendedValue($parameter, TRUE);
             }
             if (isset($params[$name])) {
                 throw new \InvalidArgumentException('Duplicate MIME parameter.');
             }
             $params[$name] = in_array($name, ['charset', 'format', 'delsp'], TRUE) ? strtolower($parameter) : $parameter;
         }
+        foreach ($sections as $name => $parts) {
+            ksort($parts);
+            if (isset($params[$name]) || array_keys($parts) !== range(0, count($parts) - 1)) {
+                throw new \InvalidArgumentException('Invalid MIME parameter continuation.');
+            }
+            $params[$name] = implode('', array_map(static fn ($i, $part) => $part[0] ? self::extendedValue($part[1], $i === 0) : $part[1], array_keys($parts), $parts));
+        }
         return [$token, $params];
+    }
+
+    /** Decodes an RFC 2231 extended value; only the first section carries the UTF-8 charset prefix. */
+    private static function extendedValue(string $value, bool $first): string
+    {
+        if ($first) {
+            if (!preg_match("/^utf-8'[^']*'(.*)$/iD", $value, $match)) {
+                throw new \InvalidArgumentException('Unsupported MIME parameter charset.');
+            }
+            $value = $match[1];
+        }
+        return rawurldecode($value);
     }
 
     /** API content order: plain text first, then HTML; plain is generated from HTML when absent. */

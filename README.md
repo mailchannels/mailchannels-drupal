@@ -101,6 +101,8 @@ encrypted, report), missing or invalid boundaries and closing delimiters, part
 headers other than Content-*/MIME-Version, duplicate text alternatives, legacy
 charsets, nesting deeper than four levels, more than 1000 parts, more than 20 MB
 of decoded attachments, an explicit
-`plain` key, or multipart attachments combined with Drupal attachment arrays.
+`plain` key, or multipart attachments that differ from the Drupal attachment
+arrays on the same message. Helpers that serialize those arrays into the body and
+leave them in place (Email Attachment Helper) send each attachment once.
 Parsing holds several copies of large attachments in memory; allow PHP roughly
 six times the serialized message size.

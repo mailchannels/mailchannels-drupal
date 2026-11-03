@@ -26,6 +26,9 @@ $mixed="--mix\r\nContent-Type: multipart/alternative; boundary=alt\r\n\r\n".str_
 $p=CoreMessage::payload(mp_msg('multipart/mixed; boundary=mix',$mixed));
 mp_check(count($p['content'])===2 && $p['content'][1]['value']===$html,'nested alternative inside mixed with CRLF');
 mp_check($p['attachments'][0]===['content'=>base64_encode($pdf),'filename'=>'Q3 report.pdf','type'=>'application/pdf'],'binary attachment bytes, disposition filename and type preserved');
+$cont="--c\nContent-Type: text/plain \n\nhi\n--c\nContent-Type: application/pdf;\n   name*0=\"long report \";\n   name*1=\"part.pdf\"\nContent-Disposition: attachment;\n   filename*0*=UTF-8''r%C3%A9;\n   filename*1=\"sum\u{e9}.pdf\"\n\nx\n--c--";
+mp_check(CoreMessage::payload(mp_msg('multipart/mixed; boundary=c',$cont))['attachments'][0]['filename']==='résumé.pdf','RFC 2231 continuation filename sections assembled');
+mp_reject(mp_msg('multipart/mixed; boundary=c',str_replace('filename*1=','filename*2=',$cont)),'gapped continuation sections rejected without message data');
 mp_check($p['attachments'][1]['filename']==='café.txt' && base64_decode($p['attachments'][1]['content'])==='notes','RFC 2231 filename and text attachment');
 
 $png="\x89PNG\r\n\x1a\n";
@@ -59,6 +62,9 @@ $deep="secret"; for($i=0;$i<6;$i++){$deep="--d$i\nContent-Type: ".($i?"multipart
 $cases[]=['excessive nesting',mp_msg('multipart/mixed; boundary=d5',$deep)];
 $m=mp_msg('multipart/alternative; boundary="alt"',$alt);$m['plain']='secret';$cases[]=['explicit plain with multipart',$m];
 $m=mp_msg('multipart/related; boundary=rel',$related);$m['params']['attachments']=[['filecontent'=>'secret']];$cases[]=['multipart and explicit attachments together',$m];
+$same=CoreMessage::payload(mp_msg('multipart/related; boundary=rel',$related));
+$m=mp_msg('multipart/related; boundary=rel',$related);$m['params']['attachments']=[['filecontent'=>$png]];
+mp_check(CoreMessage::payload($m,fn()=>$same['attachments'])['attachments']===$same['attachments'],'identical multipart and explicit attachments sent once');
 $sized=fn($n)=>mp_msg('multipart/mixed; boundary=b',"--b\nContent-Type: text/plain\n\nhi\n--b\nContent-Type: application/octet-stream\nContent-Transfer-Encoding: base64\n\n".chunk_split(base64_encode(str_repeat('a',$n)),76,"\n")."--b--");
 $p=CoreMessage::payload($sized(20971520));
 mp_check(strlen(base64_decode($p['attachments'][0]['content']))===20971520,'attachment exactly at 20 MB accepted');unset($p);

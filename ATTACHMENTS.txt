@@ -43,24 +43,16 @@ Observed contributed conventions:
    with filecontent/filename/filemime. Optional disposition=inline and cid define
    embedded content. Version 8.x-1.7 rewrites body/headers to multipart/mixed
    whenever either params key is nonempty, with no backend-selection guard.
-   This is incompatible with the current adapter's supported content types.
-   A source-level probe of the real helper hook confirms singular, plural and
-   inline rewrites are rejected at the content-type boundary. Attachment-free
-   messages are unchanged. This is not an installed-site compatibility test.
+   The backend parses that multipart body (RFC 2231 continuation filenames,
+   inline Content-IDs) and, because the helper leaves the params in place, sends
+   each attachment once when both copies are identical. The real 8.x-1.7
+   mailAlter() output passes for plain and HTML bodies with singular, plural and
+   inline attachments (source-level check, not an installed-site test).
 
-Migration from Email Attachment Helper:
-- Inventory other mail backends before changing the helper: its hook affects all
-  core mail messages, and removing it could break attachments on other routes.
-- In an isolated site, arrange for MailChannels messages to reach this adapter
-  without helper MIME rewriting. Do not simply relabel a multipart body as plain
-  text or HTML; that would expose MIME serialization as message content.
-- Compose the supported attachment arrays directly. Convert helper filename-only
-  file inputs to an explicit filepath plus a display filename. Preserve empty
-  filecontent bytes explicitly: the helper treats empty content as a file fallback,
-  whereas this adapter supports empty attachments.
-- Revalidate every affected mail route, binary and inline content, and any other
-  helper consumers before deployment. No automatic helper disablement or hook
-  suppression is implemented by this candidate.
+Email Attachment Helper is no longer required to be removed: its multipart
+rewrite is accepted. Composing the attachment arrays directly without the helper
+remains supported.
+
 3. Mailer Plus/Symfony component transports are separate adapter routes. Do not
    treat these arrays as their native Email/attachment contract.
 
