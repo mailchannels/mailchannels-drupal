@@ -22,8 +22,7 @@ See [VALIDATION.md](VALIDATION.md) for precisely scoped evidence and remaining w
 [CONTRIBUTING.md](CONTRIBUTING.md) for isolated checks, and
 [RELEASING.md](RELEASING.md) for publisher setup and release gates.
 
-This candidate deliberately rejects raw multipart MIME representations,
-multiple Reply-To addresses and distinct visible/envelope recipients. These gaps
+This candidate rejects multiple Reply-To addresses and distinct visible/envelope recipients. These gaps
 remain work to complete, not a claim of full Drupal mailer compatibility.
 No retries or SMTP fallback are installed. A FALSE mail result can represent
 uncertain acceptance; automatic resend could duplicate mail.
@@ -59,8 +58,8 @@ The API receives a plain-text alternative followed by HTML. An explicit formatte
 it, with flowed wrapping decoded so long links remain intact. The ordinary
 plain-text format path retains core PhpMail behavior.
 
-This does not add raw multipart parsing, arbitrary transfer-encoding
-support, HTML sanitization, or contributed Symfony mailer adapters.
+This does not add arbitrary transfer-encoding support, HTML sanitization, or
+contributed Symfony mailer adapters.
 
 See [attachment compatibility notes](ATTACHMENTS.txt) for the observed contributed
 formats and remaining implementation requirements. The native adapter handles the documented byte/local-file formats; ambiguous or
@@ -85,4 +84,23 @@ accepted. Quoted-printable accepts hex escapes and CRLF/LF soft breaks, but reje
 malformed escapes, raw non-ASCII bytes, bare CR and literal trailing whitespace
 (encode that whitespace as =20/=09). These strict input rules avoid silently
 repairing ambiguous mail. ASCII charset declarations are checked after decoding.
-Raw multipart MIME and arbitrary charset conversion remain unsupported.
+Arbitrary charset conversion remains unsupported.
+
+## Serialized multipart MIME bodies
+
+Modules that compose their own MIME (for example HTML mail with attachments) may
+set `Content-Type: multipart/mixed|alternative|related; boundary=...` and supply the
+serialized body; `format()` passes it through unchanged. The backend maps the first
+`text/plain` and `text/html` parts to the API's content (generating plain text from
+HTML when absent) and every other part, or any part marked `attachment`, to an API
+attachment with its filename, type and Content-ID. Parts may use the transfer
+encodings above; text parts must be UTF-8 or US-ASCII.
+
+Unsupported structures reject before HTTP: other multipart subtypes (signed,
+encrypted, report), missing or invalid boundaries and closing delimiters, part
+headers other than Content-*/MIME-Version, duplicate text alternatives, legacy
+charsets, nesting deeper than four levels, more than 1000 parts, more than 20 MB
+of decoded attachments, an explicit
+`plain` key, or multipart attachments combined with Drupal attachment arrays.
+Parsing holds several copies of large attachments in memory; allow PHP roughly
+six times the serialized message size.
