@@ -37,6 +37,12 @@ $p=CoreMessage::payload(mp_msg('multipart/related; boundary=rel',$related));
 mp_check($p['attachments'][0]['content_id']==='logo@example.com' && $p['attachments'][0]['type']==='image/png','related inline image keeps content ID');
 mp_check($p['content'][0]['type']==='text/plain' && str_contains($p['content'][0]['value'],'Hello') && $p['content'][1]['type']==='text/html','plain alternative generated from HTML-only body');
 
+$alt2="--a\nContent-Type: text/plain\n\nhi\n--a\nContent-Type: text/html\n\n<p>hi</p>\n--a--";
+$imgPart="Content-Type: image/png\nContent-ID: <i@x>\nContent-Transfer-Encoding: base64\n\n".base64_encode($png);
+$mm=fn($tail)=>mp_msg('multipart/mixed; boundary=m',"--m\nContent-Type: multipart/alternative; boundary=a\n\n$alt2\n--m\n$imgPart\n--m\nContent-Type: multipart/related; boundary=r\n\n--r\nContent-Type: multipart/alternative; boundary=a\n\n$alt2\n--r\n$tail\n--r--\n--m--");
+$p=CoreMessage::payload($mm($imgPart));
+mp_check(count($p['content'])===2 && count($p['attachments'])===1,'trailing related copy of body and images (Mime Mail) sent once');
+mp_reject($mm("Content-Type: image/png\nContent-ID: <other@x>\n\nsecret"),'trailing related part adding new content rejected without message data');
 $plainOnly="--b\nContent-Type: text/plain; charset=us-ascii; format=flowed\n\nflowed \nline\n--b--";
 mp_check(CoreMessage::payload(mp_msg('multipart/mixed; boundary=b',$plainOnly))['content']===[['type'=>'text/plain','value'=>'flowed line']],'flowed plain part decoded');
 

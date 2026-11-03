@@ -104,5 +104,7 @@ of decoded attachments, an explicit
 `plain` key, or multipart attachments that differ from the Drupal attachment
 arrays on the same message. Helpers that serialize those arrays into the body and
 leave them in place (Email Attachment Helper) send each attachment once.
+A trailing multipart/related part that only repeats the body and embedded images
+(Mime Mail 2.0.3) is accepted; one that adds new content rejects.
 Parsing holds several copies of large attachments in memory; allow PHP roughly
 six times the serialized message size.

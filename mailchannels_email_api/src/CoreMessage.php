@@ -273,8 +273,20 @@ final class CoreMessage
                 throw new \InvalidArgumentException('Unsupported multipart subtype.');
             }
             foreach (self::mimeChildren($raw, $params['boundary'] ?? '') as $index => $child) {
+                $later = $subtype !== 'alternative' && $index > 0;
+                if ($later && str_starts_with(self::mimeParameters($child[0]['content-type'] ?? 'text/plain')[0], 'multipart/')) {
+                    // Mime Mail repeats the alternative and embedded images in a trailing
+                    // multipart/related part. Accept such a part only if it adds nothing new.
+                    $entity = self::mimeEntity($child[0], $child[1], $depth + 1, FALSE, $state);
+                    $known = array_map('serialize', $result['attachments']);
+                    if ($entity['plain'] !== $result['plain'] || $entity['html'] !== $result['html']
+                        || array_diff(array_map('serialize', $entity['attachments']), $known)) {
+                        throw new \InvalidArgumentException('Ambiguous multipart body.');
+                    }
+                    continue;
+                }
                 // In mixed/related, the first part is the message body; the rest are files.
-                $entity = self::mimeEntity($child[0], $child[1], $depth + 1, $subtype !== 'alternative' && $index > 0, $state);
+                $entity = self::mimeEntity($child[0], $child[1], $depth + 1, $later, $state);
                 foreach (['plain', 'html'] as $kind) {
                     if ($entity[$kind] !== NULL) {
                         if ($result[$kind] !== NULL) {

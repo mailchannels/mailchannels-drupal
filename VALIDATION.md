@@ -87,7 +87,7 @@ This does not establish multipart parsing or contributed-mailer compatibility.
 
 ## Serialized multipart MIME (2026-11-03)
 
-`contract/multipart-probe.php` (30 checks, Docker networking disabled, locked
+`contract/multipart-probe.php` (32 checks, Docker networking disabled, locked
 drupal/core 11.4.11, PHP 8.3) covers multipart/alternative, mixed and related with
 LF and CRLF line endings, base64 and quoted-printable parts, binary attachment
 bytes, RFC 2231 UTF-8 and continuation filenames, inline Content-IDs, generated plain text, flowed

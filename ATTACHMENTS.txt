@@ -39,6 +39,13 @@ Observed contributed conventions:
    attachment.dat. filemime can be guessed by Drupal's extension MIME service.
    Duplicate paths or content are removed. Public/private/local-path reading,
    provider payload size, lifecycle and duplicates need explicit native tests.
+   When Mime Mail formats the message itself (Mail System: Mime Mail formatter,
+   MailChannels sender), its serialized multipart body is parsed. Mime Mail 2.0.3
+   repeats the alternative and embedded images in a trailing multipart/related
+   part; that copy is accepted only when it adds nothing new. Real 2.0.3
+   MimeMailFormatHelper output (HTML, explicit plaintext, plain-only, file
+   attachments, embedded local images) passes 8 source-level checks with
+   stand-in site services; this is not an installed-site test.
 2. Email Attachment Helper: params.attachment (single) or params.attachments (list),
    with filecontent/filename/filemime. Optional disposition=inline and cid define
    embedded content. Version 8.x-1.7 rewrites body/headers to multipart/mixed
