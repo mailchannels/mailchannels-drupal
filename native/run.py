@@ -92,7 +92,7 @@ try:
         assert sum(line.startswith('PASS ') for line in text.splitlines())==count,(script,text)
         checks+=count
         print(f'{script}: {count} checks passed',flush=True)
-    assert checks==167
+    assert checks==168
     # Register child servers in outer cleanup as well, including timeout paths.
     workers.extend([prefix+'-http',prefix+'-http-client',prefix+'-http-control',prefix+'-http-settings'])
     text=command([sys.executable,str(root/'native/http-session.py'),str(site),network,prefix],timeout=180)
@@ -106,7 +106,7 @@ try:
     assert sum(line.startswith('PASS ') for line in text.splitlines())==15,text
     print('Concurrent form fixture: 15 checks passed',flush=True)
     checks+=15
-    assert checks==210
+    assert checks==211
     workers.extend([prefix+'-tls',prefix+'-tls-client'])
     text=command([sys.executable,str(root/'tls/run.py'),str(site),network,prefix],timeout=180)
     assert 'TLS_PROBE_COMPLETE' in text and 'TLS_FIXTURE_CLEANUP_COMPLETE' in text,text
