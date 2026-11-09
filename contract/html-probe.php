@@ -14,6 +14,7 @@ html_check(array_column($p['content'],'type')===['text/plain','text/html'],'plai
 html_check(str_contains($p['content'][1]['value'],'<strong>日本語</strong>'),'intentional markup preserved');
 html_check(str_contains($p['content'][1]['value'],'&lt;script&gt;x&lt;/script&gt; &amp; text'),'ordinary text escaped in HTML');
 html_check(str_contains($p['content'][0]['value'],'日本語') && str_contains($p['content'][0]['value'],'café'),'generated alternative preserves Unicode');
+html_check(array_column(CoreMessage::payload(CoreMessage::format($base+['body'=>[Markup::create('<img src="cid:logo@example.com">')]]))['content'],'type')===['text/html'],'image-only HTML sends no empty plain part');
 html_check(!str_contains($p['content'][0]['value'],'<strong>'),'generated alternative converts markup');
 $m['plain']="Exact plain\n hard break";$p=CoreMessage::payload($m);
 html_check($p['content'][0]['value']===$m['plain'],'explicit plain alternative preserved exactly');

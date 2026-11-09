@@ -36,6 +36,8 @@ $related="--rel\nContent-Type: text/html; charset=utf-8\n\n<p>Hello</p><img src=
 $p=CoreMessage::payload(mp_msg('multipart/related; boundary=rel',$related));
 mp_check($p['attachments'][0]['content_id']==='logo@example.com' && $p['attachments'][0]['type']==='image/png','related inline image keeps content ID');
 mp_check($p['content'][0]['type']==='text/plain' && str_contains($p['content'][0]['value'],'Hello') && $p['content'][1]['type']==='text/html','plain alternative generated from HTML-only body');
+$imageOnly=str_replace('<p>Hello</p>','',$related);
+mp_check(array_column(CoreMessage::payload(mp_msg('multipart/related; boundary=rel',$imageOnly))['content'],'type')===['text/html'],'image-only related HTML sends no empty plain part');
 
 $alt2="--a\nContent-Type: text/plain\n\nhi\n--a\nContent-Type: text/html\n\n<p>hi</p>\n--a--";
 $imgPart="Content-Type: image/png\nContent-ID: <i@x>\nContent-Transfer-Encoding: base64\n\n".base64_encode($png);

@@ -87,7 +87,7 @@ This does not establish multipart parsing or contributed-mailer compatibility.
 
 ## Serialized multipart MIME (2026-11-03)
 
-`contract/multipart-probe.php` (32 checks, Docker networking disabled, locked
+`contract/multipart-probe.php` (33 checks, Docker networking disabled, locked
 drupal/core 11.4.11, PHP 8.3) covers multipart/alternative, mixed and related with
 LF and CRLF line endings, base64 and quoted-printable parts, binary attachment
 bytes, RFC 2231 UTF-8 and continuation filenames, inline Content-IDs, generated plain text, flowed
@@ -108,7 +108,7 @@ sent once with exact bytes and Content-ID, and attachment-free mail unchanged.
 
 ## Symfony Mailer transport (2026-11-03)
 
-`contract/mailer-transport-probe.php` (31 checks) covers the `mailchannels+api://default`
+`contract/mailer-transport-probe.php` (32 checks) covers the `mailchannels+api://default`
 transport: text/HTML/generated plain content, recipients, Reply-To, custom headers,
 file (including `attachFromPath()` stream bodies) and inline attachments, envelope sender, rejections (envelope recipient changes,
 Bcc-only, multiple From/Reply-To, legacy charsets, reserved headers, over 20 MB), DSN
