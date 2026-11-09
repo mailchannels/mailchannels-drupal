@@ -46,8 +46,16 @@ phase, production middleware or delivered email.
 
 Remaining: full message/MIME and contributed-module attachment compatibility; contributed mailer
 adapters; broader Drupal/database/runtime coverage; browser/accessibility; time-based session expiry;
-concurrent imports and recovery; production middleware review; authorized provider
-validation and domain authorization; packaging/release review and directory acceptance.
+concurrent imports and recovery; production middleware review; real delivery and
+customer domain authorization; directory acceptance.
+
+Authorized provider validation (2026-11-09): ApiSender, the Symfony transport and
+core mail sent dry-run requests to the production Email API with a MailChannels
+production test account. Plain, HTML, headers, file and inline attachments,
+and image-only HTML were all accepted (HTTP 200, nothing delivered). An invalid
+key returned 401 and was reported as rejected. A sender outside the allowlist was
+refused before any request. The image-only case first failed with a 400 for an
+empty plain-text part; that was fixed before release.
 The code can return FALSE after an uncertain network outcome. Drupal's boolean
 MailInterface cannot communicate acceptance certainty; do not retry blindly.
 

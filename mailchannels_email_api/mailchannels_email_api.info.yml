@@ -1,6 +1,6 @@
-name: MailChannels Email API candidate
+name: MailChannels Email API
 type: module
-description: 'Unreleased core mail backend candidate. Not production-ready.'
+description: 'Sends site mail through the MailChannels Email API.'
 package: Mail
 author: MailChannels
 core_version_requirement: ^11.4

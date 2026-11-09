@@ -1,7 +1,7 @@
-# MailChannels Email API for Drupal — candidate
+# MailChannels Email API for Drupal
 
-Unreleased implementation for Drupal 11.4 with a PHP 8.3–8.5 validation matrix. **Not production-ready or
-listed on Drupal.org.** Package and project names are provisional. GPL-2.0-or-later.
+Drupal 11.4 module validated on PHP 8.3–8.5. Drupal.org project and Composer package:
+`drupal/mailchannels_email_api`. GPL-2.0-or-later.
 
 The core MailInterface backend sends plain-text or explicitly requested HTML mail through the
 [MailChannels Email API](https://docs.mailchannels.com/api-reference/send/send-an-email).
@@ -22,7 +22,7 @@ See [VALIDATION.md](VALIDATION.md) for precisely scoped evidence and remaining w
 [CONTRIBUTING.md](CONTRIBUTING.md) for isolated checks, and
 [RELEASING.md](RELEASING.md) for publisher setup and release gates.
 
-This candidate rejects multiple Reply-To addresses and distinct visible/envelope recipients. These gaps
+This module rejects multiple Reply-To addresses and distinct visible/envelope recipients. These gaps
 remain work to complete, not a claim of full Drupal mailer compatibility.
 No retries or SMTP fallback are installed. A FALSE mail result can represent
 uncertain acceptance; automatic resend could duplicate mail.
