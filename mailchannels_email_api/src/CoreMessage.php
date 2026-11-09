@@ -217,7 +217,9 @@ final class CoreMessage
             if (!is_string($plain) || !mb_check_encoding($plain, 'UTF-8')) {
                 throw new \InvalidArgumentException('Invalid plain-text alternative.');
             }
-            $content = [['type' => 'text/plain', 'value' => $plain], ['type' => 'text/html', 'value' => $body]];
+            // The API rejects empty content; image-only HTML yields no plain text, so send HTML alone.
+            $content = $plain === '' ? [['type' => 'text/html', 'value' => $body]]
+                : [['type' => 'text/plain', 'value' => $plain], ['type' => 'text/html', 'value' => $body]];
         }
         }
         $payload = ['from' => $from[0], 'personalizations' => [$personalization], 'subject' => $subject,
@@ -461,7 +463,8 @@ final class CoreMessage
             throw new \InvalidArgumentException('Multipart mail has no text body.');
         }
         $plain ??= FlowedText::decode(MailFormatHelper::htmlToText($html), TRUE);
-        $content = [['type' => 'text/plain', 'value' => $plain]];
+        // The API rejects empty content; image-only HTML yields no plain text, so send HTML alone.
+        $content = $plain === '' && $html !== NULL ? [] : [['type' => 'text/plain', 'value' => $plain]];
         if ($html !== NULL) {
             $content[] = ['type' => 'text/html', 'value' => $html];
         }

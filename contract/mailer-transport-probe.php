@@ -29,6 +29,7 @@ tp_check($p['from']===['email'=>'sender@example.com','name'=>'Sender'] && $p['pe
 tp_check(!isset($p['headers']) && !isset($p['envelope_from']),'no generated headers or envelope sender leak');
 $p=tp_payload(tp_email()->html('<p>Only HTML</p>'));
 tp_check($p['content'][0]['type']==='text/plain' && str_contains($p['content'][0]['value'],'Only HTML'),'plain text generated from HTML-only email');
+tp_check(array_column(tp_payload(tp_email()->html('<img src="cid:logo@example.com">'))['content'],'type')===['text/html'],'image-only HTML sends no empty plain part');
 $bytes="%PDF\x00\xff";
 $e=tp_email()->text('x')->cc('cc@example.com')->bcc('bcc@example.com')->replyTo(new Address('reply@example.com','Reply'))
  ->attach($bytes,'report.pdf','application/pdf')->addPart((new \Symfony\Component\Mime\Part\DataPart("\x89PNG",'logo.png','image/png'))->asInline()->setContentId('logo@example.com'));

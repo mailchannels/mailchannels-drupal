@@ -69,7 +69,9 @@ final class MailChannelsTransport extends AbstractTransport {
     if ($text === NULL && $html === NULL) {
       throw new \InvalidArgumentException('A text or HTML body is required.');
     }
-    $content = [['type' => 'text/plain', 'value' => $text ?? FlowedText::decode(MailFormatHelper::htmlToText($html), TRUE)]];
+    $text ??= FlowedText::decode(MailFormatHelper::htmlToText($html), TRUE);
+    // The API rejects empty content; an image-only HTML body yields no generated text, so send HTML alone.
+    $content = $text === '' && $html !== NULL ? [] : [['type' => 'text/plain', 'value' => $text]];
     if ($html !== NULL) $content[] = ['type' => 'text/html', 'value' => $html];
     $payload = ['from' => self::address($from[0]), 'personalizations' => [$personalization],
       'subject' => (string) $email->getSubject(), 'content' => $content];
