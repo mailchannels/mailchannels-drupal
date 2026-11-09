@@ -24,7 +24,7 @@ final class SettingsForm extends FormBase {
   }
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['mapping_snapshot']=['#type'=>'hidden','#default_value'=>$this->snapshot()];
-    $form['notice'] = ['#markup' => $this->t('Unreleased candidate. Validate your site before production use. This form sends no email. API credentials remain in server settings and are never saved here.')];
+    $form['notice'] = ['#markup' => $this->t('Validate your site before switching production mail. This form sends no email. API credentials remain in server settings and are never saved here.')];
     $form['configuration'] = ['#type'=>'item', '#title'=>$this->t('Server configuration'), '#plain_text'=>$this->configured() ? (string)$this->t('Key and sender allowlist present; provider authorization is not verified') : (string)$this->t('Configure mailchannels_api_key and mailchannels_allowed_senders in server settings')];
     $options=[];
     foreach ($this->mailManager->getDefinitions() as $id=>$definition) $options[$id]=$definition['label'];

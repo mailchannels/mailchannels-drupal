@@ -15,7 +15,7 @@ use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-#[Mail(id: 'mailchannels_email_api', label: new TranslatableMarkup('MailChannels Email API candidate'))]
+#[Mail(id: 'mailchannels_email_api', label: new TranslatableMarkup('MailChannels Email API'))]
 final class MailChannels implements MailInterface, ContainerFactoryPluginInterface {
   public function __construct(private ClientInterface $http, private string $apiKey, private array $senders, private LoggerInterface $logger, private ?AttachmentMapper $attachments = NULL) {}
 

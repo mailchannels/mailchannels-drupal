@@ -1,6 +1,6 @@
 {
-  "name": "mailchannels/drupal-email-api-candidate",
-  "description": "Unreleased Drupal core mail backend candidate",
+  "name": "drupal/mailchannels_email_api",
+  "description": "Sends Drupal mail through the MailChannels Email API",
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
   "require": { "php": "^8.3", "drupal/core": "^11.4" },

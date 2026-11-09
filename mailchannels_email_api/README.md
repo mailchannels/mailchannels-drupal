@@ -1,6 +1,6 @@
-# MailChannels Email API candidate
+# MailChannels Email API
 
-Unreleased Drupal 11.4 core MailInterface backend. Not production-ready.
+Drupal 11.4 core MailInterface backend and Symfony Mailer transport for the MailChannels Email API.
 
 See the repository README, VALIDATION.md and RELEASING.md for setup, limitations
 and release gates. Installation does not change routing. Secrets belong in server
