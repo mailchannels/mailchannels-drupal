@@ -6,7 +6,7 @@ It also lints candidate PHP and verifies the Composer lock. No installed-site,
 provider delivery, browser or cross-version claim follows from these checks.
 
 The public native runner creates a fresh Drupal 11.4.11 site with MariaDB 11.8.9 or PostgreSQL 17.11
-site using the selected PHP image and runs 210 checks: 16 inert native hook, 42 mock backend transport,
+site using the selected PHP image and runs 227 checks: 16 inert native hook, 43 mock backend transport,
 27 workflow transport, 20 configuration form, 18 lifecycle and 14 configuration
 import checks, plus 30 attachment-mapper checks, 28 real HTTP authorization/CSRF/logout/session-revocation checks and 15 concurrent-form checks. It requires exact PASS counts and completion sentinels because Drush
 exit codes alone do not reliably indicate probe exceptions. No host ports or live
@@ -84,3 +84,37 @@ validation and rejection of ambiguous body arrays. Eight added installed-site
 backend checks verify one HTTP request per valid encoded body, exact decoded HTML
 in JSON, and zero requests for malformed encoding or decoded charset conflicts.
 This does not establish multipart parsing or contributed-mailer compatibility.
+
+## Serialized multipart MIME (2026-11-03)
+
+`contract/multipart-probe.php` (32 checks, Docker networking disabled, locked
+drupal/core 11.4.11, PHP 8.3) covers multipart/alternative, mixed and related with
+LF and CRLF line endings, base64 and quoted-printable parts, binary attachment
+bytes, RFC 2231 UTF-8 and continuation filenames, inline Content-IDs, generated plain text, flowed
+plain parts and `format()` pass-through, plus a 20 MB attachment boundary and 15 rejections that do not echo
+message data. Installed-site Mime Mail and Email Attachment Helper checks are below.
+Not yet established: attachment byte limits through the native suite.
+
+## Installed contributed mailers (2026-11-03)
+
+`native/contrib-mimemail-probe.php` and `native/contrib-helper-probe.php` (6 checks
+each) run last in the native suite on the installed site, with Mail System 4.5.0,
+Mime Mail 2.0.3 and Email Attachment Helper 1.7.0 from the locked native project and
+a mock HTTP client. Mime Mail as formatter with the MailChannels sender: HTML with
+plain alternative, a file attachment sent once with exact bytes, a `public://` image
+embedded as an inline attachment whose cid matches the HTML, and a plain-only body.
+Email Attachment Helper with the MailChannels formatter: list and inline attachments
+sent once with exact bytes and Content-ID, and attachment-free mail unchanged.
+
+## Symfony Mailer transport (2026-11-03)
+
+`contract/mailer-transport-probe.php` (31 checks) covers the `mailchannels+api://default`
+transport: text/HTML/generated plain content, recipients, Reply-To, custom headers,
+file (including `attachFromPath()` stream bodies) and inline attachments, envelope sender, rejections (envelope recipient changes,
+Bcc-only, multiple From/Reply-To, legacy charsets, reserved headers, over 20 MB), DSN
+credential/host refusal, one HTTP attempt per send with no retry, allowlist refusal
+(From and any-case `Sender` header) before HTTP and secret-free logs. `native/contrib-mailer-transport-probe.php` (4
+checks) sends through the installed Mailer Transport 2.0.2 module (Symfony Mailer /
+Mailer Plus project) with a DSN transport entity and a mock HTTP client. Core's own
+`symfony_mailer` mail plugin only loads Symfony's built-in transport factories, so it
+cannot use this transport.

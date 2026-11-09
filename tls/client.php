@@ -2,6 +2,7 @@
 require '/app/vendor/autoload.php';
 require '/candidate/mailchannels_email_api/src/FlowedText.php';
 require '/candidate/mailchannels_email_api/src/CoreMessage.php';
+require '/candidate/mailchannels_email_api/src/ApiSender.php';
 require '/candidate/mailchannels_email_api/src/Plugin/Mail/MailChannels.php';
 new \Drupal\Core\Site\Settings([]);
 $base_url='https://example.com';$base_path='/';

@@ -81,7 +81,7 @@ try:
     php('en','visibility_probe','contact','mailchannels_email_api','-y')
     for script,count,sentinel in [
         ('probe.php',16,'NATIVE_PROBE_COMPLETE'),
-        ('transport-probe.php',42,'TRANSPORT_PROBE_COMPLETE'),
+        ('transport-probe.php',43,'TRANSPORT_PROBE_COMPLETE'),
         ('workflow-transport-probe.php',27,'WORKFLOW_TRANSPORT_COMPLETE'),
         ('config-form-probe.php',20,'CONFIG_FORM_PROBE_COMPLETE'),
         ('lifecycle-probe.php',18,'LIFECYCLE_PROBE_COMPLETE'),
@@ -92,7 +92,7 @@ try:
         assert sum(line.startswith('PASS ') for line in text.splitlines())==count,(script,text)
         checks+=count
         print(f'{script}: {count} checks passed',flush=True)
-    assert checks==167
+    assert checks==168
     # Register child servers in outer cleanup as well, including timeout paths.
     workers.extend([prefix+'-http',prefix+'-http-client',prefix+'-http-control',prefix+'-http-settings'])
     text=command([sys.executable,str(root/'native/http-session.py'),str(site),network,prefix],timeout=180)
@@ -106,14 +106,26 @@ try:
     assert sum(line.startswith('PASS ') for line in text.splitlines())==15,text
     print('Concurrent form fixture: 15 checks passed',flush=True)
     checks+=15
-    assert checks==210
+    assert checks==211
     workers.extend([prefix+'-tls',prefix+'-tls-client'])
     text=command([sys.executable,str(root/'tls/run.py'),str(site),network,prefix],timeout=180)
     assert 'TLS_PROBE_COMPLETE' in text and 'TLS_FIXTURE_CLEANUP_COMPLETE' in text,text
     assert sum(line.startswith('PASS ') for line in text.splitlines())==6,text
     print('TLS fixture: 6 scenarios passed',flush=True)
-    print('DRUPAL_NATIVE_COMPLETE 210 checks + 6 TLS scenarios',flush=True)
-    logs.append('DRUPAL_NATIVE_COMPLETE 210 checks + 6 TLS scenarios')
+    # Contributed mailers last: Email Attachment Helper rewrites every message with attachments.
+    php('en','mailsystem','mimemail','-y')
+    for script,count,sentinel,module in [('contrib-mimemail-probe.php',6,'CONTRIB_MIMEMAIL_COMPLETE 6 checks','email_attachment'),
+        ('contrib-helper-probe.php',6,'CONTRIB_HELPER_COMPLETE 6 checks','mailer_transport'),
+        ('contrib-mailer-transport-probe.php',4,'CONTRIB_MAILER_TRANSPORT_COMPLETE 4 checks',None)]:
+        text=php('php:script','/candidate/native/'+script)
+        assert sentinel in text,(script,'missing completion',text)
+        assert sum(line.startswith('PASS ') for line in text.splitlines())==count,(script,text)
+        checks+=count
+        print(f'{script}: {count} checks passed',flush=True)
+        if module:php('en',module,'-y')
+    assert checks==227
+    print('DRUPAL_NATIVE_COMPLETE 227 checks + 6 TLS scenarios',flush=True)
+    logs.append('DRUPAL_NATIVE_COMPLETE 227 checks + 6 TLS scenarios')
 finally:
     cleanup_errors=[]
     for container in [*reversed(workers),database]:

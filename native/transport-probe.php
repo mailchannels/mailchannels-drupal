@@ -57,6 +57,8 @@ try {
   verify_transport($plugin->mail($withEnvelope) === FALSE && count($history)===$beforeEnvelope, 'unallowlisted bounce sender rejects before HTTP');
   $withAgent=$message;$withAgent['headers']=['Sender'=>'Agent <agent@example.com>'];
   verify_transport($plugin->mail($withAgent) === FALSE && count($history)===$beforeEnvelope, 'unallowlisted Sender agent rejects before HTTP');
+  $withAgent['headers']=['sender'=>'Agent <agent@example.com>'];
+  verify_transport($plugin->mail($withAgent) === FALSE && count($history)===$beforeEnvelope, 'unallowlisted lowercase sender agent rejects before HTTP');
   new Settings($originalSettings + ['mailchannels_api_key'=>'private-secret-fixture','mailchannels_allowed_senders'=>['sender@example.com','bounce@example.com','agent@example.com']]);
   $envelopePlugin=$manager->createInstance('mailchannels_email_api');
   $withEnvelope['headers']['Sender']='Agent <agent@example.com>';
