@@ -47,6 +47,9 @@ tp_reject(tp_email()->replyTo('a@example.com','b@example.com')->text('secret'),'
 tp_reject(tp_email()->text(mb_convert_encoding('café secret','ISO-8859-1','UTF-8'),'iso-8859-1'),'legacy charset');
 $e=tp_email()->text('secret');$e->getHeaders()->addTextHeader('DKIM-Signature','secret');tp_reject($e,'reserved header');
 tp_reject(tp_email()->text('secret')->attach(str_repeat('a',20971521),'big.bin'),'attachments over 20 MB');
+$path=tempnam(sys_get_temp_dir(),'tp');file_put_contents($path,$bytes);
+$p=tp_payload(tp_email()->text('x')->attachFromPath($path,'path.pdf','application/pdf'));unlink($path);
+tp_check($p['attachments'][0]===['content'=>base64_encode($bytes),'filename'=>'path.pdf','type'=>'application/pdf'],'attachFromPath stream body mapped');
 
 // Factory: only mailchannels+api://default, never credentials in the DSN.
 $loggers=new class implements \Drupal\Core\Logger\LoggerChannelFactoryInterface{public array $logs=[];function get($c){$o=$this;return new class($o) extends \Psr\Log\AbstractLogger{function __construct(private $o){}function log($l,string|\Stringable $m,array $c=[]):void{$this->o->logs[]=[$l,(string)$m];}};}function addLogger(\Psr\Log\LoggerInterface $l,$p=0){}};
@@ -70,5 +73,10 @@ foreach([[new Response(503,[],'private-secret-fixture'),'acceptance_unconfirmed'
 $before=count($history);
 try{$transport->send(tp_email()->text('x')->from('unlisted@example.com'));throw new RuntimeException('Expected config failure');}
 catch(TransportExceptionInterface $x){tp_check(count($history)===$before && str_contains($x->getMessage(),'configuration'),'sender outside allowlist refused before HTTP');}
+foreach(['Sender','sender','SENDER'] as $name){
+ $e=tp_email()->text('x');$e->getHeaders()->addMailboxHeader($name,'unlisted@example.com');$before=count($history);
+ try{$transport->send($e);throw new RuntimeException('Expected config failure');}
+ catch(TransportExceptionInterface $x){tp_check(count($history)===$before && str_contains($x->getMessage(),'configuration'),"unlisted $name header refused before HTTP");}
+}
 tp_check(!str_contains(json_encode($loggers->logs),'secret'),'logs contain no key or message data');
 echo "MAILER_TRANSPORT_COMPLETE $count checks\n";

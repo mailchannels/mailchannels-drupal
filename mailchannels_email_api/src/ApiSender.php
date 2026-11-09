@@ -17,7 +17,10 @@ final class ApiSender {
     try {
       $identities = [$payload['from']['email']];
       if (isset($payload['envelope_from'])) $identities[] = $payload['envelope_from']['email'];
-      if (isset($payload['headers']['Sender'])) $identities[] = Address::create($payload['headers']['Sender'])->getAddress();
+      // Header names are case-insensitive, so `sender:` must not skip the allowlist.
+      foreach ($payload['headers'] ?? [] as $name => $value) {
+        if (strcasecmp((string) $name, 'Sender') === 0) $identities[] = Address::create($value)->getAddress();
+      }
       if ($this->apiKey === '' || preg_match('/[\r\n\x00]/', $this->apiKey)) {
         return $this->fail('configuration');
       }

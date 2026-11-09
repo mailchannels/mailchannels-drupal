@@ -81,7 +81,7 @@ try:
     php('en','visibility_probe','contact','mailchannels_email_api','-y')
     for script,count,sentinel in [
         ('probe.php',16,'NATIVE_PROBE_COMPLETE'),
-        ('transport-probe.php',42,'TRANSPORT_PROBE_COMPLETE'),
+        ('transport-probe.php',43,'TRANSPORT_PROBE_COMPLETE'),
         ('workflow-transport-probe.php',27,'WORKFLOW_TRANSPORT_COMPLETE'),
         ('config-form-probe.php',20,'CONFIG_FORM_PROBE_COMPLETE'),
         ('lifecycle-probe.php',18,'LIFECYCLE_PROBE_COMPLETE'),
@@ -123,9 +123,9 @@ try:
         checks+=count
         print(f'{script}: {count} checks passed',flush=True)
         if module:php('en',module,'-y')
-    assert checks==226
-    print('DRUPAL_NATIVE_COMPLETE 226 checks + 6 TLS scenarios',flush=True)
-    logs.append('DRUPAL_NATIVE_COMPLETE 226 checks + 6 TLS scenarios')
+    assert checks==227
+    print('DRUPAL_NATIVE_COMPLETE 227 checks + 6 TLS scenarios',flush=True)
+    logs.append('DRUPAL_NATIVE_COMPLETE 227 checks + 6 TLS scenarios')
 finally:
     cleanup_errors=[]
     for container in [*reversed(workers),database]:
