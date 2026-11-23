@@ -65,6 +65,7 @@ $mock->append(new Response(202,[],'{"request_id":"r","results":[{"index":0,"stat
 $transport->send(tp_email()->text('accepted'));
 $req=$history[0]['request'];
 tp_check(count($history)===1 && $req->getHeaderLine('X-Api-Key')==='private-secret-fixture' && (string)$req->getUri()==='https://api.mailchannels.net/tx/v1/send','accepted send posts once to the Email API');
+tp_check($req->getHeaderLine('User-Agent')==='mailchannels-drupal/dev Drupal/'.\Drupal::VERSION,'User-Agent names the module and Drupal, dev outside a packaged release');
 tp_check(json_decode((string)$req->getBody(),TRUE)['content'][0]['value']==='accepted','request body is the mapped payload');
 foreach([[new Response(503,[],'private-secret-fixture'),'acceptance_unconfirmed'],[new Response(200,[],'{}'),'acceptance_unconfirmed'],[new Response(400,[],'secret'),'rejected']] as [$resp,$reason]){
  $mock->append($resp);$before=count($history);

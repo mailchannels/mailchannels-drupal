@@ -31,6 +31,7 @@ try {
   $mailer->send((new Email())->from('sender@example.com')->to('recipient@example.com')->subject('Mailer fixture')->text('Plain')->html('<p>HTML</p>')->attach("%PDF\x00", 'report.pdf', 'application/pdf'));
   $payload = json_decode((string) $history[0]['request']->getBody(), TRUE);
   mt_check(count($history) === 1 && $history[0]['request']->getHeaderLine('X-Api-Key') === 'private-secret-fixture', 'Mailer Plus send reaches the Email API once');
+  mt_check($history[0]['request']->getHeaderLine('User-Agent') === 'mailchannels-drupal/' . (\Drupal::service('extension.list.module')->getExtensionInfo('mailchannels_email_api')['version'] ?? 'dev') . ' Drupal/' . \Drupal::VERSION, 'Mailer Plus send names the module release and Drupal in User-Agent');
   mt_check(array_column($payload['content'], 'type') === ['text/plain', 'text/html'] && base64_decode($payload['attachments'][0]['content']) === "%PDF\x00", 'payload carries text, HTML and attachment bytes');
   $mock->append(new Response(503, [], 'private-secret-fixture'));
   try {
@@ -45,4 +46,4 @@ try {
   \Drupal::getContainer()->set('http_client', $client);
   new Settings($settings);
 }
-print "CONTRIB_MAILER_TRANSPORT_COMPLETE 4 checks\n";
+print "CONTRIB_MAILER_TRANSPORT_COMPLETE 5 checks\n";

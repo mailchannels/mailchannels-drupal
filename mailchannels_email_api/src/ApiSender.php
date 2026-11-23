@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace Drupal\mailchannels_email_api;
 
+use Drupal\Core\Extension\ModuleExtensionList;
 use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -10,7 +11,17 @@ use Symfony\Component\Mime\Address;
 
 /** Sends one validated Email API payload; shared by the mail plugin and the Symfony transport. */
 final class ApiSender {
-  public function __construct(private ClientInterface $http, private string $apiKey, private array $senders, private LoggerInterface $logger) {}
+  public function __construct(private ClientInterface $http, private string $apiKey, private array $senders, private LoggerInterface $logger, private string $version = 'dev') {}
+
+  /** Names the module release and Drupal core so usage reporting can attribute the traffic. */
+  public function userAgent(): string {
+    return 'mailchannels-drupal/' . $this->version . ' Drupal/' . \Drupal::VERSION;
+  }
+
+  /** The release drupal.org packaging stamps into the .info.yml file; 'dev' for a Git checkout. */
+  public static function moduleVersion(ModuleExtensionList $modules): string {
+    return (string) ($modules->getExtensionInfo('mailchannels_email_api')['version'] ?? 'dev');
+  }
 
   /** Returns NULL on API acceptance, otherwise a non-sensitive failure reason (already logged). */
   public function send(array $payload): ?string {
@@ -32,7 +43,7 @@ final class ApiSender {
     }
     try {
       $response = $this->http->request('POST', 'https://api.mailchannels.net/tx/v1/send', [
-        'headers' => ['X-Api-Key' => $this->apiKey, 'Accept' => 'application/json'],
+        'headers' => ['X-Api-Key' => $this->apiKey, 'Accept' => 'application/json', 'User-Agent' => $this->userAgent()],
         'json' => $payload, 'allow_redirects' => FALSE, 'http_errors' => FALSE,
         'verify' => TRUE, 'connect_timeout' => 5, 'timeout' => 15,
       ]);

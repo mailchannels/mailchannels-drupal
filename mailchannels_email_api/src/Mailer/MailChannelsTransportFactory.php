@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace Drupal\mailchannels_email_api\Mailer;
 
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\mailchannels_email_api\ApiSender;
@@ -15,7 +16,7 @@ use Symfony\Component\Mailer\Transport\TransportInterface;
 
 /** Creates the transport for mailchannels+api://default; the key stays in settings.php. */
 final class MailChannelsTransportFactory implements TransportFactoryInterface {
-  public function __construct(private ClientInterface $http, private LoggerChannelFactoryInterface $loggers) {}
+  public function __construct(private ClientInterface $http, private LoggerChannelFactoryInterface $loggers, private ?ModuleExtensionList $modules = NULL) {}
 
   public function supports(Dsn $dsn): bool {
     return $dsn->getScheme() === 'mailchannels+api';
@@ -30,6 +31,7 @@ final class MailChannelsTransportFactory implements TransportFactoryInterface {
       throw new InvalidArgumentException('Use mailchannels+api://default and set mailchannels_api_key in settings.php.');
     }
     return new MailChannelsTransport(new ApiSender($this->http, (string) Settings::get('mailchannels_api_key', ''),
-      (array) Settings::get('mailchannels_allowed_senders', []), $this->loggers->get('mailchannels_email_api')));
+      (array) Settings::get('mailchannels_allowed_senders', []), $this->loggers->get('mailchannels_email_api'),
+      $this->modules ? ApiSender::moduleVersion($this->modules) : 'dev'));
   }
 }
