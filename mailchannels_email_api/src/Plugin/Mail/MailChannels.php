@@ -17,12 +17,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 #[Mail(id: 'mailchannels_email_api', label: new TranslatableMarkup('MailChannels Email API'))]
 final class MailChannels implements MailInterface, ContainerFactoryPluginInterface {
-  public function __construct(private ClientInterface $http, private string $apiKey, private array $senders, private LoggerInterface $logger, private ?AttachmentMapper $attachments = NULL) {}
+  public function __construct(private ClientInterface $http, private string $apiKey, private array $senders, private LoggerInterface $logger, private ?AttachmentMapper $attachments = NULL, private string $version = 'dev') {}
 
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new self($container->get('http_client'), (string) Settings::get('mailchannels_api_key', ''),
       (array) Settings::get('mailchannels_allowed_senders', []), $container->get('logger.factory')->get('mailchannels_email_api'),
-      new AttachmentMapper($container->get('file_system'), $container->get('file.mime_type.guesser'), (int) Settings::get('mailchannels_attachment_bytes', 20971520)));
+      new AttachmentMapper($container->get('file_system'), $container->get('file.mime_type.guesser'), (int) Settings::get('mailchannels_attachment_bytes', 20971520)),
+      ApiSender::moduleVersion($container->get('extension.list.module')));
   }
 
   public function format(array $message) {
@@ -30,7 +31,7 @@ final class MailChannels implements MailInterface, ContainerFactoryPluginInterfa
   }
 
   public function mail(array $message) {
-    $sender = new ApiSender($this->http, $this->apiKey, $this->senders, $this->logger);
+    $sender = new ApiSender($this->http, $this->apiKey, $this->senders, $this->logger, $this->version);
     try {
       $payload = CoreMessage::payload($message, $this->attachments ? [$this->attachments, 'map'] : NULL);
     } catch (\Throwable $error) {

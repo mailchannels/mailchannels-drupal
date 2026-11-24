@@ -73,6 +73,7 @@ try {
   new Settings($originalSettings + ['mailchannels_api_key'=>'private-secret-fixture','mailchannels_allowed_senders'=>['sender@example.com']]);
   $request = $history[0]['request']; $options = $history[0]['options'];
   verify_transport((string)$request->getUri() === 'https://api.mailchannels.net/tx/v1/send' && $request->getHeaderLine('X-Api-Key') === 'private-secret-fixture', 'fixed endpoint and server key');
+  verify_transport($request->getHeaderLine('User-Agent') === 'mailchannels-drupal/' . (\Drupal::service('extension.list.module')->getExtensionInfo('mailchannels_email_api')['version'] ?? 'dev') . ' Drupal/' . \Drupal::VERSION, 'User-Agent names the module release and Drupal');
   verify_transport($options['allow_redirects'] === FALSE && $options['verify'] === TRUE && $options['timeout'] === 15 && $options['connect_timeout'] === 5, 'redirect TLS deadline controls');
   $bad = $message; $bad['from'] = 'unauthorized@example.com'; $before=count($history); $logged=count($logs->entries);
   verify_transport($plugin->mail($bad) === FALSE && count($history)===$before && array_column(array_slice($logs->entries, $logged), 2)===[$warning], 'sender allowlist rejects before HTTP at warning level');

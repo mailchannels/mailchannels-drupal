@@ -6,6 +6,6 @@ services:
       - { name: module_install.uninstall_validator }
   mailchannels_email_api.transport_factory:
     class: Drupal\mailchannels_email_api\Mailer\MailChannelsTransportFactory
-    arguments: ['@http_client', '@logger.factory']
+    arguments: ['@http_client', '@logger.factory', '@extension.list.module']
     tags:
       - { name: mailer.transport_factory }
